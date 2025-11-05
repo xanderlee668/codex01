@@ -71,6 +71,37 @@ struct AuthView: View {
                                     .focused($focusedField, equals: .confirmPassword)
                                     .authFieldStyle()
                             }
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                Picker("模式", selection: $mode) {
+                    ForEach(AuthMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.top)
+
+                Form {
+                    if mode == .register {
+                        Section(header: Text("昵称")) {
+                            TextField("给自己起个昵称", text: $displayName)
+                                .textInputAutocapitalization(.never)
+                        }
+                    }
+
+                    Section(header: Text("邮箱")) {
+                        TextField("请输入邮箱", text: $email)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
+
+                    Section(header: Text("密码")) {
+                        SecureField("请输入密码", text: $password)
+                        if mode == .register {
+                            SecureField("再次输入密码", text: $confirmPassword)
                         }
                     }
 
@@ -95,6 +126,29 @@ struct AuthView: View {
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle(mode.navigationTitle)
+                        Section {
+                            Text(message)
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+                .scrollContentBackground(.hidden)
+                .background(Color(.systemGroupedBackground))
+
+                Button(action: submit) {
+                    Text(mode.buttonTitle)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                .disabled(!isFormValid)
+                .padding(.horizontal)
+            }
+            .navigationTitle(mode.navigationTitle)
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .onChange(of: mode) { _ in
                 auth.errorMessage = nil
                 password = ""
@@ -105,6 +159,7 @@ struct AuthView: View {
                 focusedField = .email
             }
             .onSubmit(handleSubmitAction)
+            }
         }
     }
 
@@ -144,6 +199,12 @@ struct AuthView: View {
             submit()
         case .none:
             submit()
+            return !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !password.isEmpty
+        case .register:
+            return !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                !password.isEmpty &&
+                !confirmPassword.isEmpty
         }
     }
 
@@ -164,6 +225,15 @@ struct AuthView: View {
     private func clearFields() {
         displayName = ""
         email = ""
+            auth.login(email: email, password: password)
+        case .register:
+            if auth.register(displayName: displayName, email: email, password: password, confirmPassword: confirmPassword) {
+                clearFields()
+            }
+        }
+    }
+
+    private func clearFields() {
         password = ""
         confirmPassword = ""
     }
