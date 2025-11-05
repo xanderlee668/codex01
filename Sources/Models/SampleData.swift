@@ -1,11 +1,22 @@
 import Foundation
 
 enum SampleData {
-    static let sellers: [SnowboardListing.Seller] = [
-        .init(id: UUID(), nickname: "板痴阿豪", rating: 4.9, dealsCount: 86),
-        .init(id: UUID(), nickname: "北区小雪", rating: 4.7, dealsCount: 42),
-        .init(id: UUID(), nickname: "老炮儿滑雪", rating: 5.0, dealsCount: 120)
+    static let users: [User] = [
+        .init(id: UUID(), displayName: "板痴阿豪", email: "hao@snowboardswap.cn", password: "password123", dealsCount: 86, rating: 4.9),
+        .init(id: UUID(), displayName: "北区小雪", email: "snow@bj.cn", password: "password123", dealsCount: 42, rating: 4.7),
+        .init(id: UUID(), displayName: "老炮儿滑雪", email: "laopao@ski.cn", password: "password123", dealsCount: 120, rating: 5.0)
     ]
+
+    static var sellers: [SnowboardListing.Seller] {
+        users.map { user in
+            SnowboardListing.Seller(
+                id: user.id,
+                nickname: user.displayName,
+                rating: user.rating,
+                dealsCount: user.dealsCount
+            )
+        }
+    }
 
     static var listings: [SnowboardListing] {
         [

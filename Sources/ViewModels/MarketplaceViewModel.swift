@@ -16,13 +16,15 @@ final class MarketplaceViewModel: ObservableObject {
 
     var filteredListings: [SnowboardListing] {
         listings.filter { listing in
+            let keyword = filterText.trimmingCharacters(in: .whitespacesAndNewlines)
             let matchesKeyword: Bool
-            if filterText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if keyword.isEmpty {
                 matchesKeyword = true
             } else {
-                matchesKeyword = listing.title.localizedCaseInsensitiveContains(filterText) ||
-                    listing.description.localizedCaseInsensitiveContains(filterText) ||
-                    listing.location.localizedCaseInsensitiveContains(filterText)
+                matchesKeyword = listing.title.localizedCaseInsensitiveContains(keyword) ||
+                    listing.description.localizedCaseInsensitiveContains(keyword) ||
+                    listing.location.localizedCaseInsensitiveContains(keyword) ||
+                    listing.seller.nickname.localizedCaseInsensitiveContains(keyword)
             }
 
             let matchesTrade = selectedTradeOption.map { $0 == listing.tradeOption } ?? true
