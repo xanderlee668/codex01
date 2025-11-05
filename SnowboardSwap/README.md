@@ -12,17 +12,17 @@
 
 ## 目录结构
 
-```
+
 SnowboardSwap/
 ├── SnowboardSwap.xcodeproj     # Xcode 工程文件
-├── SnowboardSwap/
-│   ├── Models/                 # 数据模型与样例数据
-│   ├── ViewModels/             # 视图模型
-│   ├── Views/                  # SwiftUI 界面
-│   ├── Resources/              # 资源（Assets、Info.plist）
-│   └── Preview Content/        # SwiftUI 预览资源
+├── Models/                     # 数据模型与样例数据
+├── ViewModels/                 # 视图模型
+├── Views/                      # SwiftUI 界面
+├── Resources/                  # 资源（Assets、Info.plist）
+├── Preview Content/            # SwiftUI 预览资源
+├── SnowboardSwapApp.swift      # App 入口
 └── README.md
-```
+
 
 ## 在 macOS 上运行
 
