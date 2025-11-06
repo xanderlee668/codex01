@@ -2,13 +2,29 @@ import SwiftUI
 
 struct ListingDetailView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
-    @State private var showingMessageSheet = false
+    @EnvironmentObject private var auth: AuthViewModel
+    @State private var activeThread: MessageThread?
     @State private var localListing: SnowboardListing
     private let listingID: UUID
 
     init(listing: SnowboardListing) {
         _localListing = State(initialValue: listing)
         listingID = listing.id
+    }
+
+    private var sellerUser: User? {
+        auth.user(with: localListing.seller.id)
+    }
+
+    private var canFollowSeller: Bool {
+        guard let seller = sellerUser else { return false }
+        guard let current = auth.currentUser else { return false }
+        return current.id != seller.id
+    }
+
+    private var isFollowingSeller: Bool {
+        guard let seller = sellerUser else { return false }
+        return auth.isFollowing(userID: seller.id)
     }
 
     var body: some View {
@@ -64,7 +80,19 @@ struct ListingDetailView: View {
                 .background(.thinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
 
-                SellerCardView(seller: localListing.seller)
+                SellerCardView(
+                    seller: localListing.seller,
+                    isFollowing: isFollowingSeller,
+                    canFollow: canFollowSeller,
+                    onToggleFollow: {
+                        if let seller = sellerUser {
+                            auth.toggleFollow(userID: seller.id)
+                        }
+                    },
+                    onTap: {
+                        activeThread = marketplace.thread(with: localListing.seller)
+                    }
+                )
             }
             .padding()
         }
@@ -72,7 +100,7 @@ struct ListingDetailView: View {
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Button {
-                    showingMessageSheet = true
+                    activeThread = marketplace.thread(for: localListing)
                 } label: {
                     Label("联系卖家", systemImage: "message")
                         .frame(maxWidth: .infinity)
@@ -80,8 +108,8 @@ struct ListingDetailView: View {
                 .buttonStyle(.borderedProminent)
             }
         }
-        .sheet(isPresented: $showingMessageSheet) {
-            MessageThreadView(thread: marketplace.thread(for: localListing))
+        .sheet(item: $activeThread) { thread in
+            MessageThreadView(thread: thread)
                 .environmentObject(marketplace)
         }
         .onReceive(marketplace.$listings) { listings in
@@ -110,6 +138,10 @@ private struct InfoRow: View {
 
 private struct SellerCardView: View {
     let seller: SnowboardListing.Seller
+    let isFollowing: Bool
+    let canFollow: Bool
+    let onToggleFollow: () -> Void
+    let onTap: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -135,16 +167,37 @@ private struct SellerCardView: View {
                     }
                 }
                 Spacer()
+                if canFollow {
+                    Button(action: onToggleFollow) {
+                        Label(isFollowing ? "已关注" : "关注", systemImage: isFollowing ? "checkmark" : "plus")
+                            .font(.subheadline)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .background(isFollowing ? Color(.systemGray5) : Color.accentColor.opacity(0.2))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             Text("用心挑选器材，只为帮你找到最合适的雪板。支持面交验货，欢迎放心咨询！")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 6) {
+                Image(systemName: "message")
+                    .foregroundColor(.accentColor)
+                Text("点击卡片即可发起私聊")
+                    .font(.footnote)
+                    .foregroundColor(.accentColor)
+            }
         }
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
     }
 }
 
@@ -153,6 +206,7 @@ struct ListingDetailView_Previews: PreviewProvider {
         NavigationView {
             ListingDetailView(listing: SampleData.listings.first!)
                 .environmentObject(MarketplaceViewModel())
+                .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
         }
     }
 }
