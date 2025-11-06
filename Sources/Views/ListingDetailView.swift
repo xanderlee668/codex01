@@ -90,7 +90,7 @@ struct ListingDetailView: View {
                         }
                     },
                     onTap: {
-                        activeThread = marketplace.thread(for: localListing)
+                        activeThread = marketplace.thread(with: localListing.seller)
                     }
                 )
             }
@@ -118,10 +118,8 @@ struct ListingDetailView: View {
             .background(.thinMaterial)
         }
         .sheet(item: $activeThread) { thread in
-            NavigationStack {
-                MessageThreadView(thread: thread, showsCloseButton: true)
-            }
-            .environmentObject(marketplace)
+            MessageThreadView(thread: thread)
+                .environmentObject(marketplace)
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
@@ -207,19 +205,13 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(action: onTap) {
-                HStack(spacing: 6) {
-                    Image(systemName: "message")
-                        .foregroundColor(.accentColor)
-                    Text("与卖家私聊")
-                        .font(.footnote)
-                        .foregroundColor(.accentColor)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 6)
+            HStack(spacing: 6) {
+                Image(systemName: "message")
+                    .foregroundColor(.accentColor)
+                Text("点击卡片即可发起私聊")
+                    .font(.footnote)
+                    .foregroundColor(.accentColor)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("打开与\(seller.nickname)的聊天窗口")
         }
         .padding()
         .background(.thinMaterial)

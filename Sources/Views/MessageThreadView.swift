@@ -35,13 +35,9 @@ struct MessageThreadView: View {
                 }
                 .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-            .padding()
-            .background(Color(.systemGray6))
-        }
-        .navigationTitle(localThread.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if showsCloseButton {
+            .navigationTitle(localThread.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }
                 }
