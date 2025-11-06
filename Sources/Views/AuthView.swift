@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct AuthView: View {
     @EnvironmentObject private var auth: AuthViewModel
@@ -48,7 +47,10 @@ struct AuthView: View {
                         Text("密码")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        SecureInputField(placeholder: "请输入密码", text: $password)
+                        SecureField("请输入密码", text: $password)
+                            .textContentType(nil)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
                             .authFieldStyle()
                     }
 
@@ -57,7 +59,10 @@ struct AuthView: View {
                             Text("确认密码")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            SecureInputField(placeholder: "再次输入密码", text: $confirmPassword)
+                            SecureField("再次输入密码", text: $confirmPassword)
+                                .textContentType(nil)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
                                 .authFieldStyle()
                         }
                     }
@@ -177,58 +182,6 @@ private struct AuthFieldStyle: ViewModifier {
             .padding(.horizontal)
             .background(Color(.secondarySystemBackground))
             .cornerRadius(12)
-    }
-}
-
-private struct SecureInputField: UIViewRepresentable {
-    final class Coordinator: NSObject, UITextFieldDelegate {
-        let parent: SecureInputField
-
-        init(parent: SecureInputField) {
-            self.parent = parent
-        }
-
-        @objc
-        func textChanged(_ sender: UITextField) {
-            parent.text = sender.text ?? ""
-        }
-
-        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            textField.resignFirstResponder()
-            return true
-        }
-    }
-
-    var placeholder: String
-    @Binding var text: String
-
-    func makeUIView(context: Context) -> UITextField {
-        let field = UITextField()
-        field.placeholder = placeholder
-        field.isSecureTextEntry = true
-        field.textContentType = .password
-        field.autocapitalizationType = .none
-        field.autocorrectionType = .no
-        field.smartQuotesType = .no
-        field.smartDashesType = .no
-        field.spellCheckingType = .no
-        field.keyboardType = .default
-        field.returnKeyType = .done
-        field.delegate = context.coordinator
-        field.addTarget(context.coordinator, action: #selector(Coordinator.textChanged(_:)), for: .editingChanged)
-        field.font = UIFont.preferredFont(forTextStyle: .body)
-        field.passwordRules = nil
-        return field
-    }
-
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        if uiView.text != text {
-            uiView.text = text
-        }
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
     }
 }
 

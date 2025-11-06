@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 @MainActor
@@ -13,6 +14,7 @@ final class AuthViewModel: ObservableObject {
         self.registeredUsers = users
         self.directThreads = directThreads
         self.currentUser = currentUser
+        self.followingMap = followingMap
     }
 
     func login(email: String, password: String) {
