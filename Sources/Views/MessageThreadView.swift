@@ -16,6 +16,23 @@ struct MessageThreadView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(localThread.messages) { message in
+                        MessageBubble(message: message)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets())
+                            .id(message.id)
+                    }
+                }
+                .listStyle(.plain)
+                .onAppear {
+                    scrollToBottom(proxy, animated: false)
+                }
+                .onChange(of: localThread.messages) { _ in
+                    scrollToBottom(proxy, animated: true)
+                }
+            }
             List {
                 ForEach(localThread.messages) { message in
                     MessageBubble(message: message)
@@ -28,6 +45,8 @@ struct MessageThreadView: View {
             HStack {
                 TextField("输入消息...", text: $draft)
                     .textFieldStyle(.roundedBorder)
+                    .submitLabel(.send)
+                    .onSubmit(send)
                 Button {
                     send()
                 } label: {
@@ -35,6 +54,13 @@ struct MessageThreadView: View {
                 }
                 .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
+            .padding()
+            .background(Color(.systemGray6))
+        }
+        .navigationTitle(localThread.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if showsCloseButton {
             .navigationTitle(localThread.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -57,6 +83,19 @@ struct MessageThreadView: View {
             Message(id: UUID(), sender: .buyer, text: trimmed, timestamp: Date())
         )
         draft = ""
+    }
+
+    private func scrollToBottom(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let last = localThread.messages.last else { return }
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation {
+                    proxy.scrollTo(last.id, anchor: .bottom)
+                }
+            } else {
+                proxy.scrollTo(last.id, anchor: .bottom)
+            }
+        }
     }
 }
 

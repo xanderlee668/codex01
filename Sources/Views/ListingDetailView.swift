@@ -89,6 +89,8 @@ struct ListingDetailView: View {
                             auth.toggleFollow(userID: seller.id)
                         }
                     },
+                    onMessageTapped: {
+                        activeThread = marketplace.thread(for: localListing)
                     onTap: {
                         activeThread = marketplace.thread(with: localListing.seller)
                     }
@@ -118,6 +120,10 @@ struct ListingDetailView: View {
             .background(.thinMaterial)
         }
         .sheet(item: $activeThread) { thread in
+            NavigationStack {
+                MessageThreadView(thread: thread, showsCloseButton: true)
+            }
+            .environmentObject(marketplace)
             MessageThreadView(thread: thread)
                 .environmentObject(marketplace)
         }
@@ -150,11 +156,24 @@ private struct SellerCardView: View {
     let isFollowing: Bool
     let canFollow: Bool
     let onToggleFollow: () -> Void
+    let onMessageTapped: () -> Void
     let onTap: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.15))
+                    .frame(width: 56, height: 56)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.title2)
+                            .foregroundColor(.accentColor)
+                    )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(seller.nickname)
+                        .font(.headline)
                 Button(action: onTap) {
                     Circle()
                         .fill(Color.accentColor.opacity(0.15))
@@ -205,6 +224,9 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            ChatActionButton(style: .tinted, action: onMessageTapped)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("向\(seller.nickname)发送消息")
             HStack(spacing: 6) {
                 Image(systemName: "message")
                     .foregroundColor(.accentColor)

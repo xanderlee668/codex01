@@ -31,3 +31,23 @@ struct MessageThread: Identifiable, Hashable {
         listing?.title ?? seller.nickname
     }
 }
+
+extension Message {
+    static func == (lhs: Message, rhs: Message) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+extension MessageThread {
+    static func == (lhs: MessageThread, rhs: MessageThread) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}

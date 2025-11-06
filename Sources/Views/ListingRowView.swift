@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ListingRowView: View {
     let listing: SnowboardListing
+    var onMessageTapped: (() -> Void)? = nil
     var onSellerTapped: (() -> Void)? = nil
 
     var body: some View {
@@ -40,6 +41,7 @@ struct ListingRowView: View {
                 }
                 .font(.caption)
 
+                SellerBadgeView(seller: listing.seller, onMessageTapped: onMessageTapped)
                 SellerBadgeView(seller: listing.seller, onTap: onSellerTapped)
             }
         }
@@ -49,6 +51,7 @@ struct ListingRowView: View {
 
 private struct SellerBadgeView: View {
     let seller: SnowboardListing.Seller
+    let onMessageTapped: (() -> Void)?
     let onTap: (() -> Void)?
 
     var body: some View {
@@ -56,6 +59,8 @@ private struct SellerBadgeView: View {
             avatar
 
             VStack(alignment: .leading, spacing: 4) {
+                Text(seller.nickname)
+                    .font(.subheadline.weight(.semibold))
                 nameButton
 
                 HStack(spacing: 8) {
@@ -76,6 +81,9 @@ private struct SellerBadgeView: View {
 
             Spacer()
 
+            if let onMessageTapped {
+                ChatActionButton(style: .filled, action: onMessageTapped)
+                    .accessibilityLabel("向\(seller.nickname)发送消息")
             if onTap != nil {
                 Button(action: { onTap?() }) {
                     Label("私聊", systemImage: "bubble.right")
@@ -90,6 +98,8 @@ private struct SellerBadgeView: View {
         .padding(.top, 10)
     }
 
+    private var avatar: some View {
+        Circle()
     @ViewBuilder
     private var avatar: some View {
         let avatarView = Circle()
@@ -130,6 +140,7 @@ private struct SellerBadgeView: View {
 
 struct ListingRowView_Previews: PreviewProvider {
     static var previews: some View {
+        ListingRowView(listing: SampleData.listings.first!, onMessageTapped: {})
         ListingRowView(listing: SampleData.listings.first!, onSellerTapped: {})
             .previewLayout(.sizeThatFits)
             .padding()

@@ -112,6 +112,10 @@ struct ListingListView: View {
                     .environmentObject(marketplace)
                     .environmentObject(auth)
                 case .thread(let thread):
+                    NavigationStack {
+                        MessageThreadView(thread: thread, showsCloseButton: true)
+                    }
+                    .environmentObject(marketplace)
                     MessageThreadView(thread: thread)
                         .environmentObject(marketplace)
                 }
