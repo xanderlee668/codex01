@@ -4,6 +4,7 @@ struct ListingListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
     @EnvironmentObject private var auth: AuthViewModel
     @State private var activeSheet: ActiveSheet?
+    @State private var selectedListing: SnowboardListing?
 
     private enum ActiveSheet: Identifiable {
         case addListing
@@ -24,7 +25,7 @@ struct ListingListView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 FilterBarView()
                     .padding(.horizontal)
@@ -44,6 +45,18 @@ struct ListingListView: View {
                 } else {
                     List {
                         ForEach(marketplace.filteredListings) { listing in
+                            ListingRowView(
+                                listing: listing,
+                                isFollowingSeller: auth.isFollowing(userID: listing.seller.id),
+                                onMessageTapped: {
+                                    guard auth.isFollowing(userID: listing.seller.id) else { return }
+                                    let thread = marketplace.thread(for: listing)
+                                    activeSheet = .thread(thread)
+                                }
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedListing = listing
                             NavigationLink(destination: ListingDetailView(listing: listing)) {
                                 ListingRowView(listing: listing) {
                                     let thread = marketplace.thread(for: listing)
@@ -116,6 +129,10 @@ struct ListingListView: View {
                         MessageThreadView(thread: thread, showsCloseButton: true)
                     }
                     .environmentObject(marketplace)
+                }
+            }
+            .navigationDestination(item: $selectedListing) { listing in
+                ListingDetailView(listing: listing)
                     MessageThreadView(thread: thread)
                         .environmentObject(marketplace)
                 }

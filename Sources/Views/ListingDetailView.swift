@@ -27,6 +27,16 @@ struct ListingDetailView: View {
         return auth.isFollowing(userID: seller.id)
     }
 
+    private var canMessageSeller: Bool {
+        isFollowingSeller && sellerUser != nil
+    }
+
+    private func toggleFollow() {
+        if let seller = sellerUser {
+            auth.toggleFollow(userID: seller.id)
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -84,6 +94,7 @@ struct ListingDetailView: View {
                     seller: localListing.seller,
                     isFollowing: isFollowingSeller,
                     canFollow: canFollowSeller,
+
                     onToggleFollow: {
                         if let seller = sellerUser {
                             auth.toggleFollow(userID: seller.id)
@@ -93,6 +104,7 @@ struct ListingDetailView: View {
                         activeThread = marketplace.thread(for: localListing)
                     onTap: {
                         activeThread = marketplace.thread(with: localListing.seller)
+
                     }
                 )
             }
@@ -106,13 +118,34 @@ struct ListingDetailView: View {
                 Divider()
                     .padding(.bottom, 8)
 
+
+                if canMessageSeller {
+                    Button {
+                        activeThread = marketplace.thread(for: localListing)
+                    } label: {
+                        Label("发消息", systemImage: "message")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else if canFollowSeller {
+                    Button(action: toggleFollow) {
+                        Label("关注卖家后开聊", systemImage: "person.badge.plus")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Text("无法与当前账号私聊")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+
                 Button {
                     activeThread = marketplace.thread(for: localListing)
                 } label: {
                     Label("发消息", systemImage: "message")
+
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
                 }
-                .buttonStyle(.borderedProminent)
             }
             .padding(.horizontal)
             .padding(.top, 12)

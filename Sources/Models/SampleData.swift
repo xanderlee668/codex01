@@ -72,4 +72,12 @@ enum SampleData {
         .init(id: UUID(), seller: sellers[0], listing: listings[0], messages: demoMessages),
         .init(id: UUID(), seller: sellers[1], listing: listings[1], messages: alternateMessages)
     ]
+
+
+    static let defaultFollowingMap: [UUID: Set<UUID>] = {
+        guard let currentUser = users.last else { return [:] }
+        let followedSellers = Set(sellers.prefix(2).map(\.id))
+        return [currentUser.id: followedSellers]
+    }()
+
 }
