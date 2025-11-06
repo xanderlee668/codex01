@@ -90,7 +90,7 @@ struct ListingDetailView: View {
                         }
                     },
                     onTap: {
-                        activeThread = marketplace.thread(for: localListing)
+                        activeThread = marketplace.thread(with: localListing.seller)
                     }
                 )
             }
@@ -196,19 +196,13 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(action: onTap) {
-                HStack(spacing: 6) {
-                    Image(systemName: "message")
-                        .foregroundColor(.accentColor)
-                    Text("与卖家私聊")
-                        .font(.footnote)
-                        .foregroundColor(.accentColor)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 6)
+            HStack(spacing: 6) {
+                Image(systemName: "message")
+                    .foregroundColor(.accentColor)
+                Text("点击卡片即可发起私聊")
+                    .font(.footnote)
+                    .foregroundColor(.accentColor)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("打开与\(seller.nickname)的聊天窗口")
         }
         .padding()
         .background(.thinMaterial)
