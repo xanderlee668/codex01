@@ -4,7 +4,8 @@ enum SampleData {
     static let users: [User] = [
         .init(id: UUID(), displayName: "板痴阿豪", email: "hao@snowboardswap.cn", password: "password123", dealsCount: 86, rating: 4.9),
         .init(id: UUID(), displayName: "北区小雪", email: "snow@bj.cn", password: "password123", dealsCount: 42, rating: 4.7),
-        .init(id: UUID(), displayName: "老炮儿滑雪", email: "laopao@ski.cn", password: "password123", dealsCount: 120, rating: 5.0)
+        .init(id: UUID(), displayName: "老炮儿滑雪", email: "laopao@ski.cn", password: "password123", dealsCount: 120, rating: 5.0),
+        .init(id: UUID(), displayName: "测试用户", email: "test", password: "12345678", dealsCount: 0, rating: 5.0)
     ]
 
     static var sellers: [SnowboardListing.Seller] {

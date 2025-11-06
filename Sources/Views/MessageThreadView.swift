@@ -37,7 +37,7 @@ struct MessageThreadView: View {
                 .padding()
                 .background(Color(.systemGray6))
             }
-            .navigationTitle(localThread.listing.title)
+            .navigationTitle(localThread.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -88,7 +88,14 @@ private struct MessageBubble: View {
 
 struct MessageThreadView_Previews: PreviewProvider {
     static var previews: some View {
-        MessageThreadView(thread: .init(id: UUID(), listing: SampleData.listings.first!, messages: SampleData.demoMessages))
-            .environmentObject(MarketplaceViewModel())
+        MessageThreadView(
+            thread: .init(
+                id: UUID(),
+                seller: SampleData.listings.first!.seller,
+                listing: SampleData.listings.first!,
+                messages: SampleData.demoMessages
+            )
+        )
+        .environmentObject(MarketplaceViewModel())
     }
 }
