@@ -94,11 +94,16 @@ struct ListingDetailView: View {
                     }
                 )
             }
-            .padding()
+            .padding(.top)
+            .padding(.horizontal)
+            .padding(.bottom, 12)
         }
         .navigationTitle("详情")
-        .toolbar {
-            ToolbarItem(placement: .bottomBar) {
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                Divider()
+                    .padding(.bottom, 8)
+
                 Button {
                     activeThread = marketplace.thread(for: localListing)
                 } label: {
@@ -107,6 +112,10 @@ struct ListingDetailView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .background(.thinMaterial)
         }
         .sheet(item: $activeThread) { thread in
             MessageThreadView(thread: thread)
