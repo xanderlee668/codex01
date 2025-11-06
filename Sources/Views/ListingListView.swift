@@ -24,6 +24,10 @@ struct ListingListView: View {
         auth.currentUser?.displayName ?? "未登录"
     }
 
+    private var currentUserName: String {
+        auth.currentUser?.displayName ?? "未登录"
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
