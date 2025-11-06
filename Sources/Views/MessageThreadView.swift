@@ -6,62 +6,38 @@ struct MessageThreadView: View {
     @State private var draft: String = ""
     @State private var localThread: MessageThread
     private let thread: MessageThread
-    private let showsCloseButton: Bool
 
-    init(thread: MessageThread, showsCloseButton: Bool = false) {
+    init(thread: MessageThread) {
         self.thread = thread
-        self.showsCloseButton = showsCloseButton
         _localThread = State(initialValue: thread)
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollViewReader { proxy in
+        NavigationView {
+            VStack(spacing: 0) {
                 List {
                     ForEach(localThread.messages) { message in
                         MessageBubble(message: message)
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets())
-                            .id(message.id)
                     }
                 }
                 .listStyle(.plain)
-                .onAppear {
-                    scrollToBottom(proxy, animated: false)
-                }
-                .onChange(of: localThread.messages) { _ in
-                    scrollToBottom(proxy, animated: true)
-                }
-            }
-            List {
-                ForEach(localThread.messages) { message in
-                    MessageBubble(message: message)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-                }
-            }
-            .listStyle(.plain)
 
-            HStack {
-                TextField("输入消息...", text: $draft)
-                    .textFieldStyle(.roundedBorder)
-                    .submitLabel(.send)
-                    .onSubmit(send)
-                Button {
-                    send()
-                } label: {
-                    Image(systemName: "paperplane.fill")
+                HStack {
+                    TextField("输入消息...", text: $draft)
+                        .textFieldStyle(.roundedBorder)
+                    Button {
+                        send()
+                    } label: {
+                        Image(systemName: "paperplane.fill")
+                    }
+                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
-                .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .padding()
+                .background(Color(.systemGray6))
             }
-            .padding()
-            .background(Color(.systemGray6))
-        }
-        .navigationTitle(localThread.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if showsCloseButton {
-            .navigationTitle(localThread.title)
+            .navigationTitle(localThread.listing.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -83,19 +59,6 @@ struct MessageThreadView: View {
             Message(id: UUID(), sender: .buyer, text: trimmed, timestamp: Date())
         )
         draft = ""
-    }
-
-    private func scrollToBottom(_ proxy: ScrollViewProxy, animated: Bool) {
-        guard let last = localThread.messages.last else { return }
-        DispatchQueue.main.async {
-            if animated {
-                withAnimation {
-                    proxy.scrollTo(last.id, anchor: .bottom)
-                }
-            } else {
-                proxy.scrollTo(last.id, anchor: .bottom)
-            }
-        }
     }
 }
 
@@ -125,14 +88,7 @@ private struct MessageBubble: View {
 
 struct MessageThreadView_Previews: PreviewProvider {
     static var previews: some View {
-        MessageThreadView(
-            thread: .init(
-                id: UUID(),
-                seller: SampleData.listings.first!.seller,
-                listing: SampleData.listings.first!,
-                messages: SampleData.demoMessages
-            )
-        )
-        .environmentObject(MarketplaceViewModel())
+        MessageThreadView(thread: .init(id: UUID(), listing: SampleData.listings.first!, messages: SampleData.demoMessages))
+            .environmentObject(MarketplaceViewModel())
     }
 }

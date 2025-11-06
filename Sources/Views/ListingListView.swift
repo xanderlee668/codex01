@@ -3,22 +3,7 @@ import SwiftUI
 struct ListingListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
     @EnvironmentObject private var auth: AuthViewModel
-    @State private var activeSheet: ActiveSheet?
-    @State private var selectedListing: SnowboardListing?
-
-    private enum ActiveSheet: Identifiable {
-        case addListing
-        case thread(MessageThread)
-
-        var id: String {
-            switch self {
-            case .addListing:
-                return "addListing"
-            case .thread(let thread):
-                return thread.id.uuidString
-            }
-        }
-    }
+    @State private var showingAddSheet = false
 
     private var currentUserName: String {
         auth.currentUser?.displayName ?? "未登录"
@@ -29,7 +14,7 @@ struct ListingListView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack(spacing: 0) {
                 FilterBarView()
                     .padding(.horizontal)
@@ -49,23 +34,8 @@ struct ListingListView: View {
                 } else {
                     List {
                         ForEach(marketplace.filteredListings) { listing in
-                            ListingRowView(
-                                listing: listing,
-                                isFollowingSeller: auth.isFollowing(userID: listing.seller.id),
-                                onMessageTapped: {
-                                    guard auth.isFollowing(userID: listing.seller.id) else { return }
-                                    let thread = marketplace.thread(for: listing)
-                                    activeSheet = .thread(thread)
-                                }
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedListing = listing
                             NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                ListingRowView(listing: listing) {
-                                    let thread = marketplace.thread(for: listing)
-                                    activeSheet = .thread(thread)
-                                }
+                                ListingRowView(listing: listing)
                             }
                             .swipeActions(edge: .trailing) {
                                 Button {
@@ -103,43 +73,17 @@ struct ListingListView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        activeSheet = .addListing
+                        showingAddSheet = true
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.title3)
                     }
                 }
             }
-            .sheet(item: $activeSheet) { sheet in
-                switch sheet {
-                case .addListing:
-                    AddListingView(
-                        isPresented: Binding(
-                            get: {
-                                if case .addListing = activeSheet { return true }
-                                return false
-                            },
-                            set: { newValue in
-                                if !newValue {
-                                    activeSheet = nil
-                                }
-                            }
-                        )
-                    )
+            .sheet(isPresented: $showingAddSheet) {
+                AddListingView(isPresented: $showingAddSheet)
                     .environmentObject(marketplace)
                     .environmentObject(auth)
-                case .thread(let thread):
-                    NavigationStack {
-                        MessageThreadView(thread: thread, showsCloseButton: true)
-                    }
-                    .environmentObject(marketplace)
-                }
-            }
-            .navigationDestination(item: $selectedListing) { listing in
-                ListingDetailView(listing: listing)
-                    MessageThreadView(thread: thread)
-                        .environmentObject(marketplace)
-                }
             }
         }
     }
