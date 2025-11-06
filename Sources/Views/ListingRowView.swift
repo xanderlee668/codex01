@@ -3,6 +3,7 @@ import SwiftUI
 struct ListingRowView: View {
     let listing: SnowboardListing
     var onMessageTapped: (() -> Void)? = nil
+    var onSellerTapped: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
@@ -41,6 +42,7 @@ struct ListingRowView: View {
                 .font(.caption)
 
                 SellerBadgeView(seller: listing.seller, onMessageTapped: onMessageTapped)
+                SellerBadgeView(seller: listing.seller, onTap: onSellerTapped)
             }
         }
         .padding(.vertical, 8)
@@ -50,6 +52,7 @@ struct ListingRowView: View {
 private struct SellerBadgeView: View {
     let seller: SnowboardListing.Seller
     let onMessageTapped: (() -> Void)?
+    let onTap: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -58,6 +61,7 @@ private struct SellerBadgeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(seller.nickname)
                     .font(.subheadline.weight(.semibold))
+                nameButton
 
                 HStack(spacing: 8) {
                     HStack(spacing: 4) {
@@ -80,6 +84,15 @@ private struct SellerBadgeView: View {
             if let onMessageTapped {
                 ChatActionButton(style: .filled, action: onMessageTapped)
                     .accessibilityLabel("向\(seller.nickname)发送消息")
+            if onTap != nil {
+                Button(action: { onTap?() }) {
+                    Label("私聊", systemImage: "bubble.right")
+                        .font(.caption)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.accentColor)
             }
         }
         .padding(.top, 10)
@@ -87,18 +100,48 @@ private struct SellerBadgeView: View {
 
     private var avatar: some View {
         Circle()
+    @ViewBuilder
+    private var avatar: some View {
+        let avatarView = Circle()
             .fill(Color.accentColor.opacity(0.15))
             .frame(width: 40, height: 40)
             .overlay(
                 Image(systemName: "person.fill")
                     .foregroundColor(.accentColor)
             )
+
+        if let onTap {
+            Button(action: onTap) {
+                avatarView
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("联系\(seller.nickname)")
+        } else {
+            avatarView
+        }
+    }
+
+    @ViewBuilder
+    private var nameButton: some View {
+        if let onTap {
+            Button(action: onTap) {
+                Text(seller.nickname)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.accentColor)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("向\(seller.nickname)发送消息")
+        } else {
+            Text(seller.nickname)
+                .font(.subheadline.weight(.semibold))
+        }
     }
 }
 
 struct ListingRowView_Previews: PreviewProvider {
     static var previews: some View {
         ListingRowView(listing: SampleData.listings.first!, onMessageTapped: {})
+        ListingRowView(listing: SampleData.listings.first!, onSellerTapped: {})
             .previewLayout(.sizeThatFits)
             .padding()
     }

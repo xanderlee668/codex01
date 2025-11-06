@@ -116,6 +116,8 @@ struct ListingListView: View {
                         MessageThreadView(thread: thread, showsCloseButton: true)
                     }
                     .environmentObject(marketplace)
+                    MessageThreadView(thread: thread)
+                        .environmentObject(marketplace)
                 }
             }
         }

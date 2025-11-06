@@ -33,6 +33,14 @@ struct MessageThreadView: View {
                     scrollToBottom(proxy, animated: true)
                 }
             }
+            List {
+                ForEach(localThread.messages) { message in
+                    MessageBubble(message: message)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
+                }
+            }
+            .listStyle(.plain)
 
             HStack {
                 TextField("输入消息...", text: $draft)
@@ -53,6 +61,9 @@ struct MessageThreadView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if showsCloseButton {
+            .navigationTitle(localThread.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }
                 }
