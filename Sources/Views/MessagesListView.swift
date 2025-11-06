@@ -2,14 +2,9 @@ import SwiftUI
 
 struct MessagesListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
-    @EnvironmentObject private var auth: AuthViewModel
 
     private var sortedThreads: [MessageThread] {
-        let visibleThreads = marketplace.threads.filter { thread in
-            auth.isFollowing(userID: thread.seller.id)
-        }
-
-        return visibleThreads.sorted { lhs, rhs in
+        marketplace.threads.sorted { lhs, rhs in
             let lhsDate = lhs.messages.last?.timestamp ?? .distantPast
             let rhsDate = rhs.messages.last?.timestamp ?? .distantPast
             return lhsDate > rhsDate
@@ -125,6 +120,5 @@ struct MessagesListView_Previews: PreviewProvider {
     static var previews: some View {
         MessagesListView()
             .environmentObject(MarketplaceViewModel())
-            .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
     }
 }

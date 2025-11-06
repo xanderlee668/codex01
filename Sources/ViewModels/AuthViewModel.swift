@@ -8,7 +8,9 @@ final class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published private var followingMap: [UUID: Set<UUID>]
 
-    init(users: [User] = SampleData.users, currentUser: User? = nil, followingMap: [UUID: Set<UUID>] = SampleData.defaultFollowingMap) {
+
+    init(users: [User] = SampleData.users, currentUser: User? = nil, followingMap: [UUID: Set<UUID>] = [:]) {
+
         self.registeredUsers = users
         self.currentUser = currentUser
         self.followingMap = followingMap

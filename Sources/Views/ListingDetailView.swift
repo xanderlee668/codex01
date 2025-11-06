@@ -94,10 +94,17 @@ struct ListingDetailView: View {
                     seller: localListing.seller,
                     isFollowing: isFollowingSeller,
                     canFollow: canFollowSeller,
-                    onToggleFollow: toggleFollow,
+
+                    onToggleFollow: {
+                        if let seller = sellerUser {
+                            auth.toggleFollow(userID: seller.id)
+                        }
+                    },
                     onMessageTapped: {
-                        guard canMessageSeller else { return }
                         activeThread = marketplace.thread(for: localListing)
+                    onTap: {
+                        activeThread = marketplace.thread(with: localListing.seller)
+
                     }
                 )
             }
@@ -110,6 +117,7 @@ struct ListingDetailView: View {
             VStack(spacing: 0) {
                 Divider()
                     .padding(.bottom, 8)
+
 
                 if canMessageSeller {
                     Button {
@@ -129,6 +137,12 @@ struct ListingDetailView: View {
                     Text("无法与当前账号私聊")
                         .font(.footnote)
                         .foregroundColor(.secondary)
+
+                Button {
+                    activeThread = marketplace.thread(for: localListing)
+                } label: {
+                    Label("发消息", systemImage: "message")
+
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                 }
@@ -143,6 +157,8 @@ struct ListingDetailView: View {
                 MessageThreadView(thread: thread, showsCloseButton: true)
             }
             .environmentObject(marketplace)
+            MessageThreadView(thread: thread)
+                .environmentObject(marketplace)
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
@@ -174,6 +190,7 @@ private struct SellerCardView: View {
     let canFollow: Bool
     let onToggleFollow: () -> Void
     let onMessageTapped: () -> Void
+    let onTap: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -190,6 +207,27 @@ private struct SellerCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(seller.nickname)
                         .font(.headline)
+                Button(action: onTap) {
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.title2)
+                                .foregroundColor(.accentColor)
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("联系\(seller.nickname)")
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Button(action: onTap) {
+                        Text(seller.nickname)
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("向\(seller.nickname)发送消息")
 
                     HStack(spacing: 6) {
                         Label(String(format: "%.1f", seller.rating), systemImage: "star.fill")
@@ -219,19 +257,22 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if isFollowing {
-                ChatActionButton(style: .tinted, action: onMessageTapped)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("向\(seller.nickname)发送消息")
-            } else {
-                Text("关注后可私聊")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            ChatActionButton(style: .tinted, action: onMessageTapped)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityLabel("向\(seller.nickname)发送消息")
+            HStack(spacing: 6) {
+                Image(systemName: "message")
+                    .foregroundColor(.accentColor)
+                Text("点击卡片即可发起私聊")
+                    .font(.footnote)
+                    .foregroundColor(.accentColor)
             }
         }
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
     }
 }
 

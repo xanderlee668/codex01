@@ -57,6 +57,11 @@ struct ListingListView: View {
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 selectedListing = listing
+                            NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                ListingRowView(listing: listing) {
+                                    let thread = marketplace.thread(for: listing)
+                                    activeSheet = .thread(thread)
+                                }
                             }
                             .swipeActions(edge: .trailing) {
                                 Button {
@@ -128,6 +133,9 @@ struct ListingListView: View {
             }
             .navigationDestination(item: $selectedListing) { listing in
                 ListingDetailView(listing: listing)
+                    MessageThreadView(thread: thread)
+                        .environmentObject(marketplace)
+                }
             }
         }
     }
