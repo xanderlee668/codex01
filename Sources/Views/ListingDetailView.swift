@@ -89,8 +89,8 @@ struct ListingDetailView: View {
                             auth.toggleFollow(userID: seller.id)
                         }
                     },
-                    onMessageTapped: {
-                        activeThread = marketplace.thread(for: localListing)
+                    onTap: {
+                        activeThread = marketplace.thread(with: localListing.seller)
                     }
                 )
             }
@@ -118,10 +118,8 @@ struct ListingDetailView: View {
             .background(.thinMaterial)
         }
         .sheet(item: $activeThread) { thread in
-            NavigationStack {
-                MessageThreadView(thread: thread, showsCloseButton: true)
-            }
-            .environmentObject(marketplace)
+            MessageThreadView(thread: thread)
+                .environmentObject(marketplace)
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
@@ -152,23 +150,32 @@ private struct SellerCardView: View {
     let isFollowing: Bool
     let canFollow: Bool
     let onToggleFollow: () -> Void
-    let onMessageTapped: () -> Void
+    let onTap: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.15))
-                    .frame(width: 56, height: 56)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.title2)
-                            .foregroundColor(.accentColor)
-                    )
+                Button(action: onTap) {
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.title2)
+                                .foregroundColor(.accentColor)
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("联系\(seller.nickname)")
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(seller.nickname)
-                        .font(.headline)
+                    Button(action: onTap) {
+                        Text(seller.nickname)
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("向\(seller.nickname)发送消息")
 
                     HStack(spacing: 6) {
                         Label(String(format: "%.1f", seller.rating), systemImage: "star.fill")
@@ -198,23 +205,19 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(action: onMessageTapped) {
-                HStack(spacing: 6) {
-                    Image(systemName: "message")
-                        .foregroundColor(.accentColor)
-                    Text("发消息")
-                        .font(.footnote)
-                        .foregroundColor(.accentColor)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 6)
+            HStack(spacing: 6) {
+                Image(systemName: "message")
+                    .foregroundColor(.accentColor)
+                Text("点击卡片即可发起私聊")
+                    .font(.footnote)
+                    .foregroundColor(.accentColor)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("向\(seller.nickname)发送消息")
         }
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
     }
 }
 
