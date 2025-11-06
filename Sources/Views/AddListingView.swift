@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddListingView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var title: String = ""
     @State private var description: String = ""
     @State private var price: String = ""
@@ -69,6 +70,7 @@ struct AddListingView: View {
     }
 
     private func createListing() {
+        guard let user = auth.currentUser else { return }
         let newListing = SnowboardListing(
             id: UUID(),
             title: title,
@@ -79,7 +81,7 @@ struct AddListingView: View {
             tradeOption: tradeOption,
             isFavorite: false,
             imageName: "board_custom",
-            seller: SnowboardListing.Seller(id: UUID(), nickname: "我", rating: 5.0, dealsCount: 0)
+            seller: user.sellerProfile
         )
         marketplace.addListing(newListing)
     }
@@ -89,5 +91,6 @@ struct AddListingView_Previews: PreviewProvider {
     static var previews: some View {
         AddListingView(isPresented: .constant(true))
             .environmentObject(MarketplaceViewModel())
+            .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
     }
 }

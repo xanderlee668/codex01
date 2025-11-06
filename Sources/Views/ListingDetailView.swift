@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ListingDetailView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var showingMessageSheet = false
     @State private var localListing: SnowboardListing
     private let listingID: UUID
@@ -64,30 +65,68 @@ struct ListingDetailView: View {
                 .background(.thinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
 
-                SellerCardView(seller: localListing.seller)
+                SellerCardView(
+                    seller: localListing.seller,
+                    canFollow: sellerUser != nil && !isOwnListing,
+                    isFollowing: sellerUser.flatMap { auth.isFollowing(userID: $0.id) } ?? false,
+                    isMutual: sellerUser.flatMap { auth.isMutualFollow(with: $0.id) } ?? false,
+                    followAction: {
+                        guard let sellerUser = sellerUser else { return }
+                        auth.toggleFollow(userID: sellerUser.id)
+                    }
+                )
             }
             .padding()
         }
         .navigationTitle("详情")
         .toolbar {
-            ToolbarItem(placement: .bottomBar) {
-                Button {
-                    showingMessageSheet = true
-                } label: {
-                    Label("联系卖家", systemImage: "message")
-                        .frame(maxWidth: .infinity)
+            if sellerUser != nil && !isOwnListing {
+                ToolbarItem(placement: .bottomBar) {
+                    Button {
+                        showingMessageSheet = true
+                    } label: {
+                        Label("私信沟通", systemImage: "message")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!canOpenChat)
                 }
-                .buttonStyle(.borderedProminent)
             }
         }
         .sheet(isPresented: $showingMessageSheet) {
-            MessageThreadView(thread: marketplace.thread(for: localListing))
-                .environmentObject(marketplace)
+            if let sellerUser = sellerUser, let thread = auth.directThread(with: sellerUser.id) {
+                DirectChatView(partner: sellerUser, thread: thread)
+                    .environmentObject(auth)
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(.secondary)
+                    Text("互相关注后才能开启私聊")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+            }
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
             localListing = updated
         }
+    }
+
+    private var sellerUser: User? {
+        auth.user(with: localListing.seller.id)
+    }
+
+    private var isOwnListing: Bool {
+        guard let currentUser = auth.currentUser else { return false }
+        return currentUser.id == localListing.seller.id
+    }
+
+    private var canOpenChat: Bool {
+        guard let sellerUser = sellerUser else { return false }
+        return auth.isMutualFollow(with: sellerUser.id)
     }
 }
 
@@ -110,6 +149,10 @@ private struct InfoRow: View {
 
 private struct SellerCardView: View {
     let seller: SnowboardListing.Seller
+    let canFollow: Bool
+    let isFollowing: Bool
+    let isMutual: Bool
+    let followAction: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -141,6 +184,25 @@ private struct SellerCardView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if canFollow {
+                Button(action: followAction) {
+                    Label(
+                        isFollowing ? "已关注" : "关注卖家",
+                        systemImage: isFollowing ? "checkmark.circle.fill" : "person.badge.plus"
+                    )
+                    .font(.headline)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(isFollowing ? .green : .accentColor)
+
+                Label(
+                    isMutual ? "已互相关注，可直接私聊" : (isFollowing ? "对方尚未回关，暂无法私聊" : "互相关注后可开启私聊"),
+                    systemImage: isMutual ? "bubble.left.and.bubble.right.fill" : "lock"
+                )
+                .font(.caption)
+                .foregroundColor(isMutual ? .green : .secondary)
+            }
         }
         .padding()
         .background(.thinMaterial)
@@ -153,6 +215,7 @@ struct ListingDetailView_Previews: PreviewProvider {
         NavigationView {
             ListingDetailView(listing: SampleData.listings.first!)
                 .environmentObject(MarketplaceViewModel())
+                .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
         }
     }
 }
