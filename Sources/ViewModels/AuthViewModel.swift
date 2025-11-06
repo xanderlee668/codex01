@@ -71,6 +71,7 @@ final class AuthViewModel: ObservableObject {
             followingIDs: []
         )
         registeredUsers.append(newUser)
+        followingMap[newUser.id] = []
         currentUser = newUser
         errorMessage = nil
         return true
