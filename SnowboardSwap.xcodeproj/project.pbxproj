@@ -20,6 +20,8 @@ objects = {
 1DA820012C1A6C7E00947F1D /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA820002C1A6C7E00947F1D /* User.swift */; };
 1DA820032C1A6C9A00947F1D /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA820022C1A6C9A00947F1D /* AuthViewModel.swift */; };
 1DA820052C1A6CB400947F1D /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA820042C1A6CB400947F1D /* AuthView.swift */; };
+1DA820072C1A6D0000947F1D /* MessagesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA820062C1A6D0000947F1D /* MessagesListView.swift */; };
+1DA820092C1A6E6100947F1D /* ChatActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA820082C1A6E6100947F1D /* ChatActionButton.swift */; };
 1D3E5C932C02105F004C4C55 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3E5C922C02105F004C4C55 /* Assets.xcassets */; };
 1D3E5C962C02105F004C4C55 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -40,6 +42,8 @@ objects = {
 1DA820002C1A6C7E00947F1D /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 1DA820022C1A6C9A00947F1D /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 1DA820042C1A6CB400947F1D /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+1DA820062C1A6D0000947F1D /* MessagesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesListView.swift; sourceTree = "<group>"; };
+1DA820082C1A6E6100947F1D /* ChatActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components/ChatActionButton.swift; sourceTree = "<group>"; };
 1D3E5C922C02105F004C4C55 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 1D3E5C942C02105F004C4C55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -90,6 +94,8 @@ objects = {
 1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */,
 1D3E5C842C02105F004C4C55 /* AddListingView.swift */,
 1D3E5C862C02105F004C4C55 /* MessageThreadView.swift */,
+               1DA820062C1A6D0000947F1D /* MessagesListView.swift */,
+               1DA820082C1A6E6100947F1D /* ChatActionButton.swift */,
 1DA820042C1A6CB400947F1D /* AuthView.swift */,
 ); path = Views; sourceTree = "<group>"; };
 /* End PBXGroup section */
@@ -145,6 +151,8 @@ Base,
 1DA820012C1A6C7E00947F1D /* User.swift in Sources */,
 1DA820032C1A6C9A00947F1D /* AuthViewModel.swift in Sources */,
 1DA820052C1A6CB400947F1D /* AuthView.swift in Sources */,
+               1DA820072C1A6D0000947F1D /* MessagesListView.swift in Sources */,
+               1DA820092C1A6E6100947F1D /* ChatActionButton.swift in Sources */,
 ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
