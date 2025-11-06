@@ -146,17 +146,28 @@ private struct SellerCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                ZStack {
+                Button(action: onTap) {
                     Circle()
                         .fill(Color.accentColor.opacity(0.15))
                         .frame(width: 56, height: 56)
-                    Image(systemName: "person.fill")
-                        .font(.title2)
-                        .foregroundColor(.accentColor)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.title2)
+                                .foregroundColor(.accentColor)
+                        )
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("联系\(seller.nickname)")
+
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(seller.nickname)
-                        .font(.headline)
+                    Button(action: onTap) {
+                        Text(seller.nickname)
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("向\(seller.nickname)发送消息")
+
                     HStack(spacing: 6) {
                         Label(String(format: "%.1f", seller.rating), systemImage: "star.fill")
                             .labelStyle(.titleAndIcon)
