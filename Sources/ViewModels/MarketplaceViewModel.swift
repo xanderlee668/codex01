@@ -9,7 +9,7 @@ final class MarketplaceViewModel: ObservableObject {
     @Published var threads: [MessageThread]
 
     init(listings: [SnowboardListing] = SampleData.listings,
-         threads: [MessageThread] = SampleData.initialThreads) {
+         threads: [MessageThread] = []) {
         self.listings = listings
         self.threads = threads
     }
@@ -42,26 +42,16 @@ final class MarketplaceViewModel: ObservableObject {
         listings[index].isFavorite.toggle()
     }
 
-    func thread(with seller: SnowboardListing.Seller) -> MessageThread {
-        if let index = threads.firstIndex(where: { $0.seller.id == seller.id }) {
-            if threads[index].seller != seller {
-                threads[index].seller = seller
+    func thread(for listing: SnowboardListing) -> MessageThread {
+        if let index = threads.firstIndex(where: { $0.listing.id == listing.id }) {
+            if threads[index].listing != listing {
+                threads[index].listing = listing
             }
-            threads[index].listing = nil
             return threads[index]
         }
-        let newThread = MessageThread(id: UUID(), seller: seller, listing: nil, messages: SampleData.demoMessages)
+        let newThread = MessageThread(id: UUID(), listing: listing, messages: SampleData.demoMessages)
         threads.append(newThread)
         return newThread
-    }
-
-    func thread(for listing: SnowboardListing) -> MessageThread {
-        let existing = thread(with: listing.seller)
-        if let index = threads.firstIndex(where: { $0.id == existing.id }) {
-            threads[index].listing = listing
-            return threads[index]
-        }
-        return existing
     }
 
     func sendMessage(_ text: String, in thread: MessageThread) {
