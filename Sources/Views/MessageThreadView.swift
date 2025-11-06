@@ -18,8 +18,8 @@ struct MessageThreadView: View {
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
                 List {
-                    if localThread.messages.isEmpty {
-                        EmptyConversationRow(sellerName: localThread.seller.nickname)
+                    ForEach(localThread.messages) { message in
+                        MessageBubble(message: message)
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets())
                             .id(message.id)
@@ -120,26 +120,6 @@ private struct MessageBubble: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
-    }
-}
-
-private struct EmptyConversationRow: View {
-    let sellerName: String
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "paperplane")
-                .font(.system(size: 44))
-                .foregroundColor(.accentColor)
-            Text("和 \(sellerName) 打个招呼吧！")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            Text("发送第一条消息开启沟通")
-                .font(.caption)
-                .foregroundColor(Color(.tertiaryLabel))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 48)
     }
 }
 
