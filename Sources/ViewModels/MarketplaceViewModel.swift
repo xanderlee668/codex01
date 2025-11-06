@@ -9,7 +9,7 @@ final class MarketplaceViewModel: ObservableObject {
     @Published var threads: [MessageThread]
 
     init(listings: [SnowboardListing] = SampleData.listings,
-         threads: [MessageThread] = []) {
+         threads: [MessageThread] = SampleData.initialThreads) {
         self.listings = listings
         self.threads = threads
     }

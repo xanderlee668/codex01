@@ -6,36 +6,34 @@ struct MessageThreadView: View {
     @State private var draft: String = ""
     @State private var localThread: MessageThread
     private let thread: MessageThread
+    private let showsCloseButton: Bool
 
-    init(thread: MessageThread) {
+    init(thread: MessageThread, showsCloseButton: Bool = false) {
         self.thread = thread
+        self.showsCloseButton = showsCloseButton
         _localThread = State(initialValue: thread)
     }
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                List {
-                    ForEach(localThread.messages) { message in
-                        MessageBubble(message: message)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets())
-                    }
+        VStack(spacing: 0) {
+            List {
+                ForEach(localThread.messages) { message in
+                    MessageBubble(message: message)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
                 }
-                .listStyle(.plain)
+            }
+            .listStyle(.plain)
 
-                HStack {
-                    TextField("输入消息...", text: $draft)
-                        .textFieldStyle(.roundedBorder)
-                    Button {
-                        send()
-                    } label: {
-                        Image(systemName: "paperplane.fill")
-                    }
-                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            HStack {
+                TextField("输入消息...", text: $draft)
+                    .textFieldStyle(.roundedBorder)
+                Button {
+                    send()
+                } label: {
+                    Image(systemName: "paperplane.fill")
                 }
-                .padding()
-                .background(Color(.systemGray6))
+                .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .navigationTitle(localThread.title)
             .navigationBarTitleDisplayMode(.inline)
