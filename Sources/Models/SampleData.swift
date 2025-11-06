@@ -1,10 +1,38 @@
 import Foundation
 
 enum SampleData {
+    private static let user1ID = UUID()
+    private static let user2ID = UUID()
+    private static let user3ID = UUID()
+
     static let users: [User] = [
-        .init(id: UUID(), displayName: "板痴阿豪", email: "hao@snowboardswap.cn", password: "password123", dealsCount: 86, rating: 4.9),
-        .init(id: UUID(), displayName: "北区小雪", email: "snow@bj.cn", password: "password123", dealsCount: 42, rating: 4.7),
-        .init(id: UUID(), displayName: "老炮儿滑雪", email: "laopao@ski.cn", password: "password123", dealsCount: 120, rating: 5.0)
+        .init(
+            id: user1ID,
+            displayName: "板痴阿豪",
+            email: "hao@snowboardswap.cn",
+            password: "password123",
+            dealsCount: 86,
+            rating: 4.9,
+            followingIDs: Set([user2ID])
+        ),
+        .init(
+            id: user2ID,
+            displayName: "北区小雪",
+            email: "snow@bj.cn",
+            password: "password123",
+            dealsCount: 42,
+            rating: 4.7,
+            followingIDs: Set([user1ID, user3ID])
+        ),
+        .init(
+            id: user3ID,
+            displayName: "老炮儿滑雪",
+            email: "laopao@ski.cn",
+            password: "password123",
+            dealsCount: 120,
+            rating: 5.0,
+            followingIDs: []
+        )
     ]
 
     static var sellers: [SnowboardListing.Seller] {
@@ -63,5 +91,17 @@ enum SampleData {
         .init(id: UUID(), sender: .buyer, text: "你好，请问板子还在吗？", timestamp: Date()),
         .init(id: UUID(), sender: .seller, text: "在的，本周末可以在怀北面交。", timestamp: Date().addingTimeInterval(3600)),
         .init(id: UUID(), sender: .buyer, text: "可以小刀到2600吗？", timestamp: Date().addingTimeInterval(7200))
+    ]
+
+    static let directThreads: [DirectMessageThread] = [
+        .init(
+            id: UUID(),
+            participantIDs: [user1ID, user2ID],
+            messages: [
+                .init(id: UUID(), senderID: user1ID, text: "最近准备去崇礼，想约一波吗？", timestamp: Date().addingTimeInterval(-7200)),
+                .init(id: UUID(), senderID: user2ID, text: "好呀，周六上午我有空。", timestamp: Date().addingTimeInterval(-3600)),
+                .init(id: UUID(), senderID: user1ID, text: "那我提前把板子打蜡，顺便带点装备过去。", timestamp: Date().addingTimeInterval(-1800))
+            ]
+        )
     ]
 }
