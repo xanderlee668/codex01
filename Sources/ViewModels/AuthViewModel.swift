@@ -6,12 +6,13 @@ final class AuthViewModel: ObservableObject {
     @Published private(set) var registeredUsers: [User]
     @Published var currentUser: User?
     @Published var errorMessage: String?
-    @Published private var followingMap: [UUID: Set<UUID>]
+    @Published private(set) var directThreads: [DirectMessageThread]
 
-
-    init(users: [User] = SampleData.users, currentUser: User? = nil, followingMap: [UUID: Set<UUID>] = [:]) {
-
+    init(users: [User] = SampleData.users,
+         directThreads: [DirectMessageThread] = SampleData.directThreads,
+         currentUser: User? = nil) {
         self.registeredUsers = users
+        self.directThreads = directThreads
         self.currentUser = currentUser
         self.followingMap = followingMap
     }
@@ -66,7 +67,8 @@ final class AuthViewModel: ObservableObject {
             email: trimmedEmail,
             password: password,
             dealsCount: 0,
-            rating: 5.0
+            rating: 5.0,
+            followingIDs: []
         )
         registeredUsers.append(newUser)
         currentUser = newUser
@@ -80,22 +82,59 @@ final class AuthViewModel: ObservableObject {
     }
 
     func user(with id: UUID) -> User? {
-        registeredUsers.first { $0.id == id }
+        registeredUsers.first(where: { $0.id == id })
     }
 
     func isFollowing(userID: UUID) -> Bool {
-        guard let currentID = currentUser?.id, currentID != userID else { return false }
-        return followingMap[currentID, default: []].contains(userID)
+        guard let currentUser else { return false }
+        return currentUser.followingIDs.contains(userID)
+    }
+
+    func isMutualFollow(with userID: UUID) -> Bool {
+        guard let currentUser else { return false }
+        guard let otherUser = user(with: userID) else { return false }
+        return currentUser.followingIDs.contains(userID) && otherUser.followingIDs.contains(currentUser.id)
     }
 
     func toggleFollow(userID: UUID) {
-        guard let currentID = currentUser?.id, currentID != userID else { return }
-        var relations = followingMap[currentID, default: []]
-        if relations.contains(userID) {
-            relations.remove(userID)
+        guard var currentUser = currentUser else { return }
+        guard currentUser.id != userID else { return }
+
+        if currentUser.followingIDs.contains(userID) {
+            currentUser.followingIDs.remove(userID)
         } else {
-            relations.insert(userID)
+            currentUser.followingIDs.insert(userID)
         }
-        followingMap[currentID] = relations
+
+        persist(user: currentUser)
+    }
+
+    func directThread(with userID: UUID) -> DirectMessageThread? {
+        guard let currentUser else { return nil }
+        let participants: Set<UUID> = [currentUser.id, userID]
+        if let index = directThreads.firstIndex(where: { $0.participantIDs == participants }) {
+            return directThreads[index]
+        }
+        let thread = DirectMessageThread(id: UUID(), participantIDs: participants)
+        directThreads.append(thread)
+        return thread
+    }
+
+    @discardableResult
+    func sendDirectMessage(_ text: String, in thread: DirectMessageThread) -> DirectMessage? {
+        guard let currentUser else { return nil }
+        guard let index = directThreads.firstIndex(where: { $0.id == thread.id }) else { return nil }
+        let message = DirectMessage(id: UUID(), senderID: currentUser.id, text: text, timestamp: Date())
+        directThreads[index].messages.append(message)
+        return message
+    }
+
+    private func persist(user: User) {
+        if let index = registeredUsers.firstIndex(where: { $0.id == user.id }) {
+            registeredUsers[index] = user
+        }
+        if currentUser?.id == user.id {
+            currentUser = user
+        }
     }
 }

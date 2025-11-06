@@ -7,6 +7,7 @@ struct User: Identifiable, Equatable {
     var password: String
     var dealsCount: Int
     var rating: Double
+    var followingIDs: Set<UUID>
 
     var sellerProfile: SnowboardListing.Seller {
         SnowboardListing.Seller(

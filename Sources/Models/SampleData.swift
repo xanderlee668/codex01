@@ -1,11 +1,38 @@
 import Foundation
 
 enum SampleData {
+    private static let user1ID = UUID()
+    private static let user2ID = UUID()
+    private static let user3ID = UUID()
+
     static let users: [User] = [
-        .init(id: UUID(), displayName: "板痴阿豪", email: "hao@snowboardswap.cn", password: "password123", dealsCount: 86, rating: 4.9),
-        .init(id: UUID(), displayName: "北区小雪", email: "snow@bj.cn", password: "password123", dealsCount: 42, rating: 4.7),
-        .init(id: UUID(), displayName: "老炮儿滑雪", email: "laopao@ski.cn", password: "password123", dealsCount: 120, rating: 5.0),
-        .init(id: UUID(), displayName: "测试用户", email: "test", password: "12345678", dealsCount: 0, rating: 5.0)
+        .init(
+            id: user1ID,
+            displayName: "板痴阿豪",
+            email: "hao@snowboardswap.cn",
+            password: "password123",
+            dealsCount: 86,
+            rating: 4.9,
+            followingIDs: Set([user2ID])
+        ),
+        .init(
+            id: user2ID,
+            displayName: "北区小雪",
+            email: "snow@bj.cn",
+            password: "password123",
+            dealsCount: 42,
+            rating: 4.7,
+            followingIDs: Set([user1ID, user3ID])
+        ),
+        .init(
+            id: user3ID,
+            displayName: "老炮儿滑雪",
+            email: "laopao@ski.cn",
+            password: "password123",
+            dealsCount: 120,
+            rating: 5.0,
+            followingIDs: []
+        )
     ]
 
     static let sellers: [SnowboardListing.Seller] = users.map { user in
@@ -62,22 +89,15 @@ enum SampleData {
         .init(id: UUID(), sender: .buyer, text: "可以小刀到2600吗？", timestamp: Date().addingTimeInterval(7200))
     ]
 
-    static let alternateMessages: [Message] = [
-        .init(id: UUID(), sender: .seller, text: "嗨，我这周末也会在崇礼，方便看板吗？", timestamp: Date().addingTimeInterval(-86000)),
-        .init(id: UUID(), sender: .buyer, text: "没问题，周日午后可以吗？", timestamp: Date().addingTimeInterval(-83000)),
-        .init(id: UUID(), sender: .seller, text: "可以，到时给你定位。", timestamp: Date().addingTimeInterval(-82000))
+    static let directThreads: [DirectMessageThread] = [
+        .init(
+            id: UUID(),
+            participantIDs: [user1ID, user2ID],
+            messages: [
+                .init(id: UUID(), senderID: user1ID, text: "最近准备去崇礼，想约一波吗？", timestamp: Date().addingTimeInterval(-7200)),
+                .init(id: UUID(), senderID: user2ID, text: "好呀，周六上午我有空。", timestamp: Date().addingTimeInterval(-3600)),
+                .init(id: UUID(), senderID: user1ID, text: "那我提前把板子打蜡，顺便带点装备过去。", timestamp: Date().addingTimeInterval(-1800))
+            ]
+        )
     ]
-
-    static let initialThreads: [MessageThread] = [
-        .init(id: UUID(), seller: sellers[0], listing: listings[0], messages: demoMessages),
-        .init(id: UUID(), seller: sellers[1], listing: listings[1], messages: alternateMessages)
-    ]
-
-
-    static let defaultFollowingMap: [UUID: Set<UUID>] = {
-        guard let currentUser = users.last else { return [:] }
-        let followedSellers = Set(sellers.prefix(2).map(\.id))
-        return [currentUser.id: followedSellers]
-    }()
-
 }
