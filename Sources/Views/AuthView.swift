@@ -36,8 +36,12 @@ struct AuthView: View {
 
                     Section(header: Text("密码")) {
                         SecureField("请输入密码", text: $password)
+                            .textContentType(.password)
+                            .textInputAutocapitalization(.never)
                         if mode == .register {
                             SecureField("再次输入密码", text: $confirmPassword)
+                                .textContentType(.password)
+                                .textInputAutocapitalization(.never)
                         }
                     }
 

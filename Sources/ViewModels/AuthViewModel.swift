@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 @MainActor
@@ -5,10 +6,12 @@ final class AuthViewModel: ObservableObject {
     @Published private(set) var registeredUsers: [User]
     @Published var currentUser: User?
     @Published var errorMessage: String?
+    @Published private var followingMap: [UUID: Set<UUID>]
 
-    init(users: [User] = SampleData.users, currentUser: User? = nil) {
+    init(users: [User] = SampleData.users, currentUser: User? = nil, followingMap: [UUID: Set<UUID>] = SampleData.defaultFollowingMap) {
         self.registeredUsers = users
         self.currentUser = currentUser
+        self.followingMap = followingMap
     }
 
     func login(email: String, password: String) {
@@ -72,5 +75,25 @@ final class AuthViewModel: ObservableObject {
     func logout() {
         currentUser = nil
         errorMessage = nil
+    }
+
+    func user(with id: UUID) -> User? {
+        registeredUsers.first { $0.id == id }
+    }
+
+    func isFollowing(userID: UUID) -> Bool {
+        guard let currentID = currentUser?.id, currentID != userID else { return false }
+        return followingMap[currentID, default: []].contains(userID)
+    }
+
+    func toggleFollow(userID: UUID) {
+        guard let currentID = currentUser?.id, currentID != userID else { return }
+        var relations = followingMap[currentID, default: []]
+        if relations.contains(userID) {
+            relations.remove(userID)
+        } else {
+            relations.insert(userID)
+        }
+        followingMap[currentID] = relations
     }
 }
