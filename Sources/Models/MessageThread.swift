@@ -23,6 +23,11 @@ struct Message: Identifiable, Hashable {
 
 struct MessageThread: Identifiable, Hashable {
     let id: UUID
-    var listing: SnowboardListing
+    var seller: SnowboardListing.Seller
+    var listing: SnowboardListing?
     var messages: [Message]
+
+    var title: String {
+        listing?.title ?? seller.nickname
+    }
 }

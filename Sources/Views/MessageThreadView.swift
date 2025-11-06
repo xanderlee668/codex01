@@ -6,40 +6,42 @@ struct MessageThreadView: View {
     @State private var draft: String = ""
     @State private var localThread: MessageThread
     private let thread: MessageThread
+    private let showsCloseButton: Bool
 
-    init(thread: MessageThread) {
+    init(thread: MessageThread, showsCloseButton: Bool = false) {
         self.thread = thread
+        self.showsCloseButton = showsCloseButton
         _localThread = State(initialValue: thread)
     }
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                List {
-                    ForEach(localThread.messages) { message in
-                        MessageBubble(message: message)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets())
-                    }
+        VStack(spacing: 0) {
+            List {
+                ForEach(localThread.messages) { message in
+                    MessageBubble(message: message)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
                 }
-                .listStyle(.plain)
-
-                HStack {
-                    TextField("输入消息...", text: $draft)
-                        .textFieldStyle(.roundedBorder)
-                    Button {
-                        send()
-                    } label: {
-                        Image(systemName: "paperplane.fill")
-                    }
-                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                .padding()
-                .background(Color(.systemGray6))
             }
-            .navigationTitle(localThread.listing.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .listStyle(.plain)
+
+            HStack {
+                TextField("输入消息...", text: $draft)
+                    .textFieldStyle(.roundedBorder)
+                Button {
+                    send()
+                } label: {
+                    Image(systemName: "paperplane.fill")
+                }
+                .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .padding()
+            .background(Color(.systemGray6))
+        }
+        .navigationTitle(localThread.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if showsCloseButton {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { dismiss() }
                 }
@@ -88,7 +90,14 @@ private struct MessageBubble: View {
 
 struct MessageThreadView_Previews: PreviewProvider {
     static var previews: some View {
-        MessageThreadView(thread: .init(id: UUID(), listing: SampleData.listings.first!, messages: SampleData.demoMessages))
-            .environmentObject(MarketplaceViewModel())
+        MessageThreadView(
+            thread: .init(
+                id: UUID(),
+                seller: SampleData.listings.first!.seller,
+                listing: SampleData.listings.first!,
+                messages: SampleData.demoMessages
+            )
+        )
+        .environmentObject(MarketplaceViewModel())
     }
 }
