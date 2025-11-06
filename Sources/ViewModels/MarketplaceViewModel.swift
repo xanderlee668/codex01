@@ -50,7 +50,7 @@ final class MarketplaceViewModel: ObservableObject {
             threads[index].listing = nil
             return threads[index]
         }
-        let newThread = MessageThread(id: UUID(), seller: seller, listing: nil, messages: [])
+        let newThread = MessageThread(id: UUID(), seller: seller, listing: nil, messages: SampleData.demoMessages)
         threads.append(newThread)
         return newThread
     }

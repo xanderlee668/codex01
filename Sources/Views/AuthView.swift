@@ -7,72 +7,96 @@ struct AuthView: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
-
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
                 Picker("模式", selection: $mode) {
-                    ForEach(AuthMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
+                    ForEach(AuthMode.allCases) { selection in
+                        Text(selection.title).tag(selection)
                     }
                 }
-                .pickerStyle(.segmented)
-                .padding(.top)
+                .pickerStyle(SegmentedPickerStyle())
 
-                Form {
+                VStack(alignment: .leading, spacing: 16) {
                     if mode == .register {
-                        Section(header: Text("昵称")) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("昵称")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                             TextField("给自己起个昵称", text: $displayName)
-                                .textInputAutocapitalization(.never)
+                                .autocapitalization(.words)
+                                .textContentType(.nickname)
+                                .disableAutocorrection(true)
+                                .authFieldStyle()
                         }
                     }
 
-                    Section(header: Text("邮箱")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("邮箱")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                         TextField("请输入邮箱", text: $email)
                             .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
+                            .autocapitalization(.none)
+                            .textContentType(.emailAddress)
+                            .disableAutocorrection(true)
+                            .authFieldStyle()
                     }
 
-                    Section(header: Text("密码")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("密码")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                         SecureField("请输入密码", text: $password)
-                            .textContentType(.password)
-                            .textInputAutocapitalization(.never)
-                        if mode == .register {
-                            SecureField("再次输入密码", text: $confirmPassword)
-                                .textContentType(.password)
-                                .textInputAutocapitalization(.never)
-                        }
+                            .textContentType(nil)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                            .authFieldStyle()
                     }
 
-                    if let message = auth.errorMessage {
-                        Section {
-                            Text(message)
-                                .foregroundColor(.red)
+                    if mode == .register {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("确认密码")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            SecureField("再次输入密码", text: $confirmPassword)
+                                .textContentType(nil)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .authFieldStyle()
                         }
                     }
                 }
-                .scrollContentBackground(.hidden)
-                .background(Color(.systemGroupedBackground))
+
+                if let message = auth.errorMessage {
+                    Text(message)
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 Button(action: submit) {
                     Text(mode.buttonTitle)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor)
+                        .background(isFormValid ? Color.accentColor : Color.accentColor.opacity(0.4))
                         .foregroundColor(.white)
                         .cornerRadius(12)
                 }
                 .disabled(!isFormValid)
-                .padding(.horizontal)
+
+                Spacer()
             }
-            .navigationTitle(mode.navigationTitle)
+            .padding()
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationTitle(mode.navigationTitle)
             .onChange(of: mode) { _ in
                 auth.errorMessage = nil
                 password = ""
                 confirmPassword = ""
+                if mode == .register {
+                    displayName = ""
+                }
             }
         }
     }
@@ -80,27 +104,37 @@ struct AuthView: View {
     private var isFormValid: Bool {
         switch mode {
         case .login:
-            return !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !password.isEmpty
+            return !trimmedEmail.isEmpty && !password.isEmpty
         case .register:
-            return !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-                !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-                !password.isEmpty &&
-                !confirmPassword.isEmpty
+            return !trimmedDisplayName.isEmpty &&
+                !trimmedEmail.isEmpty &&
+                password.count >= 6 &&
+                password == confirmPassword
         }
+    }
+
+    private var trimmedEmail: String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedDisplayName: String {
+        displayName.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func submit() {
         switch mode {
         case .login:
-            auth.login(email: email, password: password)
+            auth.login(email: trimmedEmail, password: password)
         case .register:
-            if auth.register(displayName: displayName, email: email, password: password, confirmPassword: confirmPassword) {
+            if auth.register(displayName: trimmedDisplayName, email: trimmedEmail, password: password, confirmPassword: confirmPassword) {
                 clearFields()
             }
         }
     }
 
     private func clearFields() {
+        displayName = ""
+        email = ""
         password = ""
         confirmPassword = ""
     }
@@ -138,5 +172,21 @@ struct AuthView_Previews: PreviewProvider {
     static var previews: some View {
         AuthView()
             .environmentObject(AuthViewModel())
+    }
+}
+
+private struct AuthFieldStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(.vertical, 12)
+            .padding(.horizontal)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+    }
+}
+
+private extension View {
+    func authFieldStyle() -> some View {
+        modifier(AuthFieldStyle())
     }
 }

@@ -1,83 +1,34 @@
-import Foundation
 import SwiftUI
 
 struct MessagesListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
-    @EnvironmentObject private var auth: AuthViewModel
-    @State private var selectedThread: MessageThread?
 
-    private var followedSellerIDs: Set<UUID> {
-        auth.followedSellerIDs
-    }
-
-    private var activeThreads: [MessageThread] {
-        marketplace.threads
-            .filter { followedSellerIDs.contains($0.seller.id) }
-            .sorted { lhs, rhs in
-                let lhsDate = lhs.messages.last?.timestamp ?? .distantPast
-                let rhsDate = rhs.messages.last?.timestamp ?? .distantPast
-                return lhsDate > rhsDate
-            }
-    }
-
-    private var sellersWithoutThreads: [SnowboardListing.Seller] {
-        let activeIDs = Set(activeThreads.map(\.seller.id))
-        let remaining = followedSellerIDs.subtracting(activeIDs)
-
-        let sellersFromListings = marketplace.listings.reduce(into: [UUID: SnowboardListing.Seller]()) { partialResult, listing in
-            partialResult[listing.seller.id] = listing.seller
-        }
-
-        return remaining.compactMap { sellerID in
-            if let seller = sellersFromListings[sellerID] {
-                return seller
-            }
-            return auth.user(with: sellerID)?.sellerProfile
-        }
-        .sorted { lhs, rhs in
-            lhs.nickname.localizedCaseInsensitiveCompare(rhs.nickname) == .orderedAscending
+    private var sortedThreads: [MessageThread] {
+        marketplace.threads.sorted { lhs, rhs in
+            let lhsDate = lhs.messages.last?.timestamp ?? .distantPast
+            let rhsDate = rhs.messages.last?.timestamp ?? .distantPast
+            return lhsDate > rhsDate
         }
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if activeThreads.isEmpty && sellersWithoutThreads.isEmpty {
+                if sortedThreads.isEmpty {
                     EmptyStateView()
                 } else {
                     List {
-                        if !activeThreads.isEmpty {
-                            Section(header: Text("活跃会话")) {
-                                ForEach(activeThreads) { thread in
-                                    Button {
-                                        selectedThread = thread
-                                    } label: {
-                                        ConversationRow(thread: thread)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-
-                        if !sellersWithoutThreads.isEmpty {
-                            Section(header: Text("关注的卖家")) {
-                                ForEach(sellersWithoutThreads) { seller in
-                                    Button {
-                                        let thread = marketplace.thread(with: seller)
-                                        selectedThread = thread
-                                    } label: {
-                                        FollowedSellerRow(seller: seller)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
+                        ForEach(sortedThreads) { thread in
+                            NavigationLink(value: thread) {
+                                ConversationRow(thread: thread)
                             }
                         }
                     }
-                    .listStyle(.insetGrouped)
+                    .listStyle(.plain)
                 }
             }
             .navigationTitle("消息")
-            .navigationDestination(item: $selectedThread) { thread in
+            .navigationDestination(for: MessageThread.self) { thread in
                 MessageThreadView(thread: thread)
             }
         }
@@ -143,11 +94,6 @@ private struct ConversationRow: View {
                     .foregroundColor(.primary)
                     .lineLimit(2)
             }
-
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundColor(.secondary)
-                .padding(.top, 6)
         }
         .padding(.vertical, 8)
     }
@@ -159,7 +105,7 @@ private struct EmptyStateView: View {
             Image(systemName: "bubble.left.and.exclamationmark.bubble.right")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
-            Text("关注喜欢的卖家后，就可以在这里开始聊天啦！")
+            Text("还没有会话，去集市找喜欢的雪板开聊吧！")
                 .font(.headline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -170,53 +116,9 @@ private struct EmptyStateView: View {
     }
 }
 
-private struct FollowedSellerRow: View {
-    let seller: SnowboardListing.Seller
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Circle()
-                .fill(Color.accentColor.opacity(0.12))
-                .frame(width: 44, height: 44)
-                .overlay(
-                    Image(systemName: "person.fill")
-                        .foregroundColor(.accentColor)
-                )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(seller.nickname)
-                    .font(.headline)
-
-                HStack(spacing: 6) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                        Text(String(format: "%.1f", seller.rating))
-                    }
-                    Text("成交 \(seller.dealsCount) 笔")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                Text("点我开始聊天")
-                    .font(.caption)
-                    .foregroundColor(.accentColor)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 8)
-    }
-}
-
 struct MessagesListView_Previews: PreviewProvider {
     static var previews: some View {
         MessagesListView()
             .environmentObject(MarketplaceViewModel())
-            .environmentObject(AuthViewModel(currentUser: SampleData.users.last))
     }
 }

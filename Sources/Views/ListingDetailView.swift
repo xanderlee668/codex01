@@ -3,7 +3,7 @@ import SwiftUI
 struct ListingDetailView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
     @EnvironmentObject private var auth: AuthViewModel
-    @State private var activeThread: MessageThread?
+    @State private var showingMessageSheet = false
     @State private var localListing: SnowboardListing
     private let listingID: UUID
 
@@ -92,12 +92,12 @@ struct ListingDetailView: View {
 
                 SellerCardView(
                     seller: localListing.seller,
-                    isFollowing: isFollowingSeller,
-                    canFollow: canFollowSeller,
-                    onToggleFollow: toggleFollow,
-                    onMessageTapped: {
-                        guard canMessageSeller else { return }
-                        activeThread = marketplace.thread(for: localListing)
+                    canFollow: sellerUser != nil && !isOwnListing,
+                    isFollowing: sellerUser.flatMap { auth.isFollowing(userID: $0.id) } ?? false,
+                    isMutual: sellerUser.flatMap { auth.isMutualFollow(with: $0.id) } ?? false,
+                    followAction: {
+                        guard let sellerUser = sellerUser else { return }
+                        auth.toggleFollow(userID: sellerUser.id)
                     }
                 )
             }
@@ -106,31 +106,17 @@ struct ListingDetailView: View {
             .padding(.bottom, 12)
         }
         .navigationTitle("详情")
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 0) {
-                Divider()
-                    .padding(.bottom, 8)
-
-                if canMessageSeller {
+        .toolbar {
+            if sellerUser != nil && !isOwnListing {
+                ToolbarItem(placement: .bottomBar) {
                     Button {
-                        activeThread = marketplace.thread(for: localListing)
+                        showingMessageSheet = true
                     } label: {
-                        Label("发消息", systemImage: "message")
+                        Label("私信沟通", systemImage: "message")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                } else if canFollowSeller {
-                    Button(action: toggleFollow) {
-                        Label("关注卖家后开聊", systemImage: "person.badge.plus")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                } else {
-                    Text("无法与当前账号私聊")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                    .disabled(!canOpenChat)
                 }
             }
             .padding(.horizontal)
@@ -138,16 +124,40 @@ struct ListingDetailView: View {
             .padding(.bottom, 8)
             .background(.thinMaterial)
         }
-        .sheet(item: $activeThread) { thread in
-            NavigationStack {
-                MessageThreadView(thread: thread, showsCloseButton: true)
+        .sheet(isPresented: $showingMessageSheet) {
+            if let sellerUser = sellerUser, let thread = auth.directThread(with: sellerUser.id) {
+                DirectChatView(partner: sellerUser, thread: thread)
+                    .environmentObject(auth)
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(.secondary)
+                    Text("互相关注后才能开启私聊")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
             }
-            .environmentObject(marketplace)
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
             localListing = updated
         }
+    }
+
+    private var sellerUser: User? {
+        auth.user(with: localListing.seller.id)
+    }
+
+    private var isOwnListing: Bool {
+        guard let currentUser = auth.currentUser else { return false }
+        return currentUser.id == localListing.seller.id
+    }
+
+    private var canOpenChat: Bool {
+        guard let sellerUser = sellerUser else { return false }
+        return auth.isMutualFollow(with: sellerUser.id)
     }
 }
 
@@ -170,10 +180,10 @@ private struct InfoRow: View {
 
 private struct SellerCardView: View {
     let seller: SnowboardListing.Seller
-    let isFollowing: Bool
     let canFollow: Bool
-    let onToggleFollow: () -> Void
-    let onMessageTapped: () -> Void
+    let isFollowing: Bool
+    let isMutual: Bool
+    let followAction: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -190,6 +200,27 @@ private struct SellerCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(seller.nickname)
                         .font(.headline)
+                Button(action: onTap) {
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.title2)
+                                .foregroundColor(.accentColor)
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("联系\(seller.nickname)")
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Button(action: onTap) {
+                        Text(seller.nickname)
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("向\(seller.nickname)发送消息")
 
                     HStack(spacing: 6) {
                         Label(String(format: "%.1f", seller.rating), systemImage: "star.fill")
@@ -219,19 +250,30 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if isFollowing {
-                ChatActionButton(style: .tinted, action: onMessageTapped)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("向\(seller.nickname)发送消息")
-            } else {
-                Text("关注后可私聊")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            if canFollow {
+                Button(action: followAction) {
+                    Label(
+                        isFollowing ? "已关注" : "关注卖家",
+                        systemImage: isFollowing ? "checkmark.circle.fill" : "person.badge.plus"
+                    )
+                    .font(.headline)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(isFollowing ? .green : .accentColor)
+
+                Label(
+                    isMutual ? "已互相关注，可直接私聊" : (isFollowing ? "对方尚未回关，暂无法私聊" : "互相关注后可开启私聊"),
+                    systemImage: isMutual ? "bubble.left.and.bubble.right.fill" : "lock"
+                )
+                .font(.caption)
+                .foregroundColor(isMutual ? .green : .secondary)
             }
         }
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
     }
 }
 
