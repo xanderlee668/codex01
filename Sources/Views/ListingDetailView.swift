@@ -90,7 +90,6 @@ struct ListingDetailView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!canOpenChat)
-                    .help(canOpenChat ? nil : "互相关注后才能发起私聊")
                 }
             }
         }
