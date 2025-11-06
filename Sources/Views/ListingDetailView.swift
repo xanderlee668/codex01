@@ -107,7 +107,7 @@ struct ListingDetailView: View {
                 Button {
                     activeThread = marketplace.thread(for: localListing)
                 } label: {
-                    Label("联系卖家", systemImage: "message")
+                    Label("发消息", systemImage: "message")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
