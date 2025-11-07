@@ -33,13 +33,16 @@ final class AuthViewModel: ObservableObject {
             followersOfCurrentUser: []
         )
 
+        let resolvedAccounts: [UserAccount]
         if accounts.isEmpty {
-            self.accounts = [fallbackAccount]
+            resolvedAccounts = [fallbackAccount]
         } else {
-            self.accounts = accounts
+            resolvedAccounts = accounts
         }
 
-        let resolvedAccount = initialAccount ?? self.accounts.first ?? fallbackAccount
+        self.accounts = resolvedAccounts
+
+        let resolvedAccount = initialAccount ?? resolvedAccounts.first ?? fallbackAccount
         self.marketplace = MarketplaceViewModel(account: resolvedAccount)
         self.isAuthenticated = isAuthenticated
         if isAuthenticated {
