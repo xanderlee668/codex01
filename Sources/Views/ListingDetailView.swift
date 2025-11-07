@@ -13,6 +13,15 @@ struct ListingDetailView: View {
         listingID = listing.id
     }
 
+    /// Legacy initializer kept for compatibility with older call sites that
+    /// still pass the current user when presenting the detail view. The view
+    /// no longer relies on that value, so we simply forward to the primary
+    /// initializer.
+    @available(*, deprecated, message: "Use init(listing:) instead.")
+    init(listing: SnowboardListing, currentUser: SnowboardListing.Seller) {
+        self.init(listing: listing)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
