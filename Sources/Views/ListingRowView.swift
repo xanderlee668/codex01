@@ -46,7 +46,7 @@ struct ListingRowView: View {
 
 struct ListingRowView_Previews: PreviewProvider {
     static var previews: some View {
-        ListingRowView(listing: SampleData.listings.first!)
+        ListingRowView(listing: SampleData.seedListings.first!)
             .previewLayout(.sizeThatFits)
             .padding()
     }
