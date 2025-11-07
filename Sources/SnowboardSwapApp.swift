@@ -2,19 +2,13 @@ import SwiftUI
 
 @main
 struct SnowboardSwapApp: App {
-    @StateObject private var marketplace = MarketplaceViewModel()
-    @StateObject private var auth = AuthViewModel()
+    @StateObject private var authViewModel = AuthViewModel()
 
     var body: some Scene {
         WindowGroup {
-            if auth.currentUser != nil {
-                ListingListView()
-                    .environmentObject(marketplace)
-                    .environmentObject(auth)
-            } else {
-                AuthView()
-                    .environmentObject(auth)
-            }
+            AuthView()
+                .environmentObject(authViewModel)
+                .environmentObject(authViewModel.marketplace)
         }
     }
 }
