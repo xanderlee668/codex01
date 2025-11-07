@@ -51,7 +51,7 @@ struct ListingDetailView: View {
                             localListing.isFavorite.toggle()
                         } label: {
                             Label(
-                                localListing.isFavorite ? "已收藏" : "收藏",
+                                localListing.isFavorite ? "Saved" : "Save",
                                 systemImage: localListing.isFavorite ? "heart.fill" : "heart"
                             )
                             .labelStyle(.iconOnly)
@@ -67,9 +67,9 @@ struct ListingDetailView: View {
 
                     Divider()
 
-                    InfoRow(icon: "mappin.circle", title: "交易地点", value: localListing.location)
-                    InfoRow(icon: "shippingbox", title: "交易方式", value: localListing.tradeOption.rawValue)
-                    InfoRow(icon: "tag", title: "价格", value: localListing.formattedPrice)
+                    InfoRow(icon: "mappin.circle", title: "Location", value: localListing.location)
+                    InfoRow(icon: "shippingbox", title: "Trade option", value: localListing.tradeOption.rawValue)
+                    InfoRow(icon: "tag", title: "Price", value: localListing.formattedPrice)
                 }
                 .padding()
                 .background(.thinMaterial)
@@ -79,11 +79,11 @@ struct ListingDetailView: View {
             }
             .padding()
         }
-        .navigationTitle("详情")
+        .navigationTitle("Details")
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Button(action: openChat) {
-                    Label("私聊", systemImage: "bubble.left.and.bubble.right.fill")
+                    Label("Message", systemImage: "bubble.left.and.bubble.right.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -94,10 +94,10 @@ struct ListingDetailView: View {
             MessageThreadView(thread: thread)
                 .environmentObject(marketplace)
         }
-        .alert("暂无法发起私聊", isPresented: $showingFollowAlert) {
-            Button("好的", role: .cancel) { showingFollowAlert = false }
+        .alert("Messaging unavailable", isPresented: $showingFollowAlert) {
+            Button("OK", role: .cancel) { showingFollowAlert = false }
         } message: {
-            Text(followAlertMessage ?? "需要与 \(localListing.seller.nickname) 互相关注后才能开启私聊。")
+            Text(followAlertMessage ?? "Follow \(localListing.seller.nickname) back to unlock messaging.")
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
@@ -122,10 +122,10 @@ struct ListingDetailView: View {
                 activeThread = thread
             }
         case .awaitingCurrentUserFollowBack:
-            followAlertMessage = "对方已经关注了你，回关即可开始聊天。"
+            followAlertMessage = "This rider already follows you—follow back to start chatting."
             showingFollowAlert = true
         case .awaitingMutualFollow:
-            followAlertMessage = "需要先互相关注才能与 \(localListing.seller.nickname) 私聊。"
+            followAlertMessage = "Follow each other before messaging \(localListing.seller.nickname)."
             showingFollowAlert = true
         }
     }
@@ -174,7 +174,7 @@ private struct SellerCardView: View {
                         Label(String(format: "%.1f", seller.rating), systemImage: "star.fill")
                             .labelStyle(.titleAndIcon)
                             .foregroundColor(.yellow)
-                        Text("成交 \(seller.dealsCount) 笔")
+                        Text("Completed \(seller.dealsCount) trades")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -183,7 +183,7 @@ private struct SellerCardView: View {
                 Button {
                     marketplace.toggleFollow(for: seller)
                 } label: {
-                    Text(isFollowing ? "已关注" : "关注")
+                    Text(isFollowing ? "Following" : "Follow")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .padding(.horizontal, 16)
@@ -194,14 +194,14 @@ private struct SellerCardView: View {
                 }
             }
 
-            Text("用心挑选器材，只为帮你找到最合适的雪板。支持面交验货，欢迎放心咨询！")
+            Text("Curated European gear, inspected and ready for your next trip. Happy to answer any questions!")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             if chatStatus.canOpenThread {
                 Button(action: onChat) {
-                    Label("私聊", systemImage: "bubble.left.and.bubble.right.fill")
+                    Label("Message", systemImage: "bubble.left.and.bubble.right.fill")
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
                 }
@@ -209,15 +209,15 @@ private struct SellerCardView: View {
                 .controlSize(.large)
                 .padding(.top, 4)
 
-                Label("已互相关注，可直接发起私聊", systemImage: "checkmark.seal.fill")
+                Label("Mutual follow active—feel free to chat", systemImage: "checkmark.seal.fill")
                     .font(.caption)
                     .foregroundColor(.accentColor)
             } else if chatStatus == .awaitingCurrentUserFollowBack {
-                Label("对方已关注你，回关即可开通私聊", systemImage: "person.2.fill")
+                Label("They already follow you—follow back to unlock chat", systemImage: "person.2.fill")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                Label("互相关注后即可私聊沟通细节", systemImage: "bubble.left.and.bubble.right")
+                Label("Mutual follows unlock private chat", systemImage: "bubble.left.and.bubble.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

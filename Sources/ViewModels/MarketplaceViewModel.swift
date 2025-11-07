@@ -28,19 +28,17 @@ final class MarketplaceViewModel: ObservableObject {
 
     init(
         listings: [SnowboardListing] = SampleData.seedListings,
-        currentUser: SnowboardListing.Seller = SampleData.currentUser,
-        followingSellerIDs: Set<UUID> = SampleData.currentUserFollowingSellerIDs,
-        followersOfCurrentUser: Set<UUID> = SampleData.followersOfCurrentUser,
+        account: UserAccount = SampleData.defaultAccount,
         threads: [MessageThread]? = nil
     ) {
         self.listings = listings
-        self.currentUser = currentUser
-        self.followingSellerIDs = followingSellerIDs
-        self.followersOfCurrentUser = followersOfCurrentUser
+        self.currentUser = account.seller
+        self.followingSellerIDs = account.followingSellerIDs
+        self.followersOfCurrentUser = account.followersOfCurrentUser
         if let threads {
             self.threads = threads
         } else {
-            self.threads = SampleData.seedThreads(for: listings)
+            self.threads = SampleData.seedThreads(for: listings, account: account)
         }
     }
 
@@ -123,5 +121,12 @@ final class MarketplaceViewModel: ObservableObject {
         let message = Message(id: UUID(), sender: .buyer, text: text, timestamp: Date())
         threads[index].messages.append(message)
         return message
+    }
+
+    func configure(with account: UserAccount) {
+        currentUser = account.seller
+        followingSellerIDs = account.followingSellerIDs
+        followersOfCurrentUser = account.followersOfCurrentUser
+        threads = SampleData.seedThreads(for: listings, account: account)
     }
 }

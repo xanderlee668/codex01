@@ -13,27 +13,27 @@ struct AddListingView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("基本信息")) {
-                    TextField("标题，例如：Burton Custom 154", text: $title)
-                    Picker("交易方式", selection: $tradeOption) {
+                Section(header: Text("Basics")) {
+                    TextField("Title, e.g. Burton Custom 154", text: $title)
+                    Picker("Trade option", selection: $tradeOption) {
                         ForEach(SnowboardListing.TradeOption.allCases) { option in
                             Text(option.rawValue).tag(option)
                         }
                     }
-                    Picker("成色", selection: $condition) {
+                    Picker("Condition", selection: $condition) {
                         ForEach(SnowboardListing.Condition.allCases) { condition in
                             Text(condition.rawValue).tag(condition)
                         }
                     }
                 }
 
-                Section(header: Text("价格与地点")) {
-                    TextField("¥ 价格", text: $price)
+                Section(header: Text("Price & location")) {
+                    TextField("£ Price", text: $price)
                         .keyboardType(.numberPad)
-                    TextField("所在城市或雪场", text: $location)
+                    TextField("City or resort", text: $location)
                 }
 
-                Section(header: Text("详细描述")) {
+                Section(header: Text("Description")) {
                     TextEditor(text: $description)
                         .frame(height: 140)
                         .overlay(
@@ -42,16 +42,16 @@ struct AddListingView: View {
                         )
                 }
             }
-            .navigationTitle("发布雪板")
+            .navigationTitle("List snowboard")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button("Cancel") {
                         isPresented = false
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("发布") {
+                    Button("Publish") {
                         createListing()
                         isPresented = false
                     }
@@ -79,7 +79,7 @@ struct AddListingView: View {
             tradeOption: tradeOption,
             isFavorite: false,
             imageName: "board_custom",
-            seller: SampleData.currentUser
+            seller: marketplace.currentUser
         )
         marketplace.addListing(newListing)
     }

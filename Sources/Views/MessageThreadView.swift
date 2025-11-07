@@ -25,7 +25,7 @@ struct MessageThreadView: View {
                 .listStyle(.plain)
 
                 HStack(spacing: 12) {
-                    TextField("输入消息...", text: $draft)
+                    TextField("Type a message...", text: $draft)
                         .textFieldStyle(.roundedBorder)
                         .disableAutocorrection(true)
                     Button(action: send) {
@@ -40,7 +40,7 @@ struct MessageThreadView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("关闭") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
             }
         }
@@ -86,7 +86,7 @@ private struct MessageBubble: View {
 
 struct MessageThreadView_Previews: PreviewProvider {
     static var previews: some View {
-        if let thread = SampleData.seedThreads(for: SampleData.seedListings).first {
+        if let thread = SampleData.seedThreads(for: SampleData.seedListings, account: SampleData.defaultAccount).first {
             MessageThreadView(thread: thread)
                 .environmentObject(MarketplaceViewModel())
         } else if let listing = SampleData.seedListings.first {

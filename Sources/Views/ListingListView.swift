@@ -20,7 +20,7 @@ struct ListingListView: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle("雪板集市")
+            .navigationTitle("Marketplace")
             .toolbar { addListingToolbarItem }
             .sheet(isPresented: $showingAddSheet) {
                 AddListingView(isPresented: $showingAddSheet)
@@ -47,7 +47,7 @@ struct ListingListView: View {
                 .swipeActions(edge: .trailing) {
                     Button { toggleFavorite(for: listing) } label: {
                         Label(
-                            listing.isFavorite ? "取消收藏" : "收藏",
+                            listing.isFavorite ? "Unfavourite" : "Favourite",
                             systemImage: listing.isFavorite ? "heart.slash" : "heart"
                         )
                     }
@@ -63,7 +63,7 @@ struct ListingListView: View {
             Image(systemName: "snowflake")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
-            Text("暂时没有符合条件的雪板")
+            Text("No boards match your filters")
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
