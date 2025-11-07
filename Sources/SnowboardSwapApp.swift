@@ -2,12 +2,13 @@ import SwiftUI
 
 @main
 struct SnowboardSwapApp: App {
-    @StateObject private var marketplace = MarketplaceViewModel()
+    @StateObject private var authViewModel = AuthViewModel()
 
     var body: some Scene {
         WindowGroup {
-            ListingListView()
-                .environmentObject(marketplace)
+            AuthView()
+                .environmentObject(authViewModel)
+                .environmentObject(authViewModel.marketplace)
         }
     }
 }

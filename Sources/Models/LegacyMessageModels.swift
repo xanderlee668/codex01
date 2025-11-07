@@ -1,11 +1,11 @@
 import Foundation
 
 struct Message: Identifiable, Hashable {
-    enum Sender {
+    enum Sender: Hashable {
         case buyer
         case seller
 
-        var name: String {
+        var displayName: String {
             switch self {
             case .buyer:
                 return "我"
