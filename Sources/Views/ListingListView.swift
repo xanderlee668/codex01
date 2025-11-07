@@ -2,7 +2,16 @@ import SwiftUI
 
 struct ListingListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var showingAddSheet = false
+
+    private var currentUserName: String {
+        auth.currentUser?.displayName ?? "未登录"
+    }
+
+    private var currentUserName: String {
+        auth.currentUser?.displayName ?? "未登录"
+    }
 
     var body: some View {
         NavigationView {
@@ -46,6 +55,22 @@ struct ListingListView: View {
             }
             .navigationTitle("雪板集市")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        if let user = auth.currentUser {
+                            Label("交易完成：\(user.dealsCount)", systemImage: "handbag")
+                            Label(String(format: "好评率：%.1f", user.rating), systemImage: "star")
+                        }
+                        Button(role: .destructive) {
+                            auth.logout()
+                        } label: {
+                            Label("退出登录", systemImage: "rectangle.portrait.and.arrow.forward")
+                        }
+                    } label: {
+                        Label(currentUserName, systemImage: "person.crop.circle")
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingAddSheet = true
@@ -58,6 +83,7 @@ struct ListingListView: View {
             .sheet(isPresented: $showingAddSheet) {
                 AddListingView(isPresented: $showingAddSheet)
                     .environmentObject(marketplace)
+                    .environmentObject(auth)
             }
         }
     }
@@ -67,5 +93,6 @@ struct ListingListView_Previews: PreviewProvider {
     static var previews: some View {
         ListingListView()
             .environmentObject(MarketplaceViewModel())
+            .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
     }
 }
