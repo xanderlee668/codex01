@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ListingListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var showingAddSheet = false
 
     private var listings: [SnowboardListing] { marketplace.filteredListings }
@@ -24,6 +25,7 @@ struct ListingListView: View {
             .sheet(isPresented: $showingAddSheet) {
                 AddListingView(isPresented: $showingAddSheet)
                     .environmentObject(marketplace)
+                    .environmentObject(auth)
             }
         }
     }
@@ -87,5 +89,6 @@ struct ListingListView_Previews: PreviewProvider {
     static var previews: some View {
         ListingListView()
             .environmentObject(MarketplaceViewModel())
+            .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
     }
 }
