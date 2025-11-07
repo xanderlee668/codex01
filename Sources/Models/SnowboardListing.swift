@@ -2,18 +2,18 @@ import Foundation
 
 struct SnowboardListing: Identifiable, Hashable {
     enum Condition: String, CaseIterable, Identifiable {
-        case new = "全新"
-        case likeNew = "九成新"
-        case good = "良好"
-        case worn = "有使用痕迹"
+        case new = "Brand New"
+        case likeNew = "Like New"
+        case good = "Good"
+        case worn = "Well Used"
 
         var id: String { rawValue }
     }
 
     enum TradeOption: String, CaseIterable, Identifiable {
-        case faceToFace = "当面交易"
-        case courier = "快递寄送"
-        case hybrid = "面交或快递"
+        case faceToFace = "Face to face"
+        case courier = "Courier"
+        case hybrid = "Face to face or courier"
 
         var id: String { rawValue }
     }
@@ -39,12 +39,12 @@ struct SnowboardListing: Identifiable, Hashable {
     static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencySymbol = "¥"
+        formatter.locale = Locale(identifier: "en_GB")
         formatter.maximumFractionDigits = 0
         return formatter
     }()
 
     var formattedPrice: String {
-        SnowboardListing.formatter.string(from: NSNumber(value: price)) ?? "¥0"
+        SnowboardListing.formatter.string(from: NSNumber(value: price)) ?? "£0"
     }
 }

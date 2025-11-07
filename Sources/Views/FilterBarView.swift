@@ -8,7 +8,7 @@ struct FilterBarView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("搜索雪板、地点或卖家", text: $marketplace.filterText)
+                TextField("Search boards, locations or sellers", text: $marketplace.filterText)
                     .textInputAutocapitalization(.never)
             }
             .padding(10)
@@ -17,7 +17,7 @@ struct FilterBarView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    PickerChipView(title: "全部交易", isSelected: marketplace.selectedTradeOption == nil) {
+                    PickerChipView(title: "All trade options", isSelected: marketplace.selectedTradeOption == nil) {
                         marketplace.selectedTradeOption = nil
                     }
 
@@ -31,7 +31,7 @@ struct FilterBarView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    PickerChipView(title: "全部成色", isSelected: marketplace.selectedCondition == nil) {
+                    PickerChipView(title: "All conditions", isSelected: marketplace.selectedCondition == nil) {
                         marketplace.selectedCondition = nil
                     }
 
