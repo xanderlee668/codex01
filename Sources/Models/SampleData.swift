@@ -48,9 +48,4 @@ enum SampleData {
         ]
     }
 
-    static let demoMessages: [Message] = [
-        .init(id: UUID(), sender: .buyer, text: "你好，请问板子还在吗？", timestamp: Date()),
-        .init(id: UUID(), sender: .seller, text: "在的，本周末可以在怀北面交。", timestamp: Date().addingTimeInterval(3600)),
-        .init(id: UUID(), sender: .buyer, text: "可以小刀到2600吗？", timestamp: Date().addingTimeInterval(7200))
-    ]
 }
