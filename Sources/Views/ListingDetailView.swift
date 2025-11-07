@@ -5,6 +5,7 @@ struct ListingDetailView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @State private var showingMessageSheet = false
     @State private var localListing: SnowboardListing
+    @State private var showingContactAlert = false
     private let listingID: UUID
 
     init(listing: SnowboardListing) {
