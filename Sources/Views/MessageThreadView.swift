@@ -5,11 +5,11 @@ struct MessageThreadView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: String = ""
     @State private var localThread: MessageThread
-    private let thread: MessageThread
+    private let threadID: UUID
 
     init(thread: MessageThread) {
-        self.thread = thread
         _localThread = State(initialValue: thread)
+        threadID = thread.id
     }
 
     var body: some View {
@@ -24,12 +24,11 @@ struct MessageThreadView: View {
                 }
                 .listStyle(.plain)
 
-                HStack {
+                HStack(spacing: 12) {
                     TextField("输入消息...", text: $draft)
                         .textFieldStyle(.roundedBorder)
-                    Button {
-                        send()
-                    } label: {
+                        .disableAutocorrection(true)
+                    Button(action: send) {
                         Image(systemName: "paperplane.fill")
                     }
                     .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -46,7 +45,7 @@ struct MessageThreadView: View {
             }
         }
         .onReceive(marketplace.$threads) { threads in
-            guard let updated = threads.first(where: { $0.id == thread.id }) else { return }
+            guard let updated = threads.first(where: { $0.id == threadID }) else { return }
             localThread = updated
         }
     }
@@ -54,10 +53,9 @@ struct MessageThreadView: View {
     private func send() {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        marketplace.sendMessage(trimmed, in: thread)
-        localThread.messages.append(
-            Message(id: UUID(), sender: .buyer, text: trimmed, timestamp: Date())
-        )
+        if let message = marketplace.sendMessage(trimmed, in: localThread) {
+            localThread.messages.append(message)
+        }
         draft = ""
     }
 }
@@ -67,10 +65,10 @@ private struct MessageBubble: View {
 
     var body: some View {
         HStack {
-            if message.sender == .buyer { Spacer() }
+            if message.sender == .buyer { Spacer(minLength: 0) }
 
             VStack(alignment: message.sender == .buyer ? .trailing : .leading, spacing: 6) {
-                Text(message.sender.name)
+                Text(message.sender.displayName)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text(message.text)
@@ -79,7 +77,7 @@ private struct MessageBubble: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
 
-            if message.sender == .seller { Spacer() }
+            if message.sender == .seller { Spacer(minLength: 0) }
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
@@ -88,7 +86,14 @@ private struct MessageBubble: View {
 
 struct MessageThreadView_Previews: PreviewProvider {
     static var previews: some View {
-        MessageThreadView(thread: .init(id: UUID(), listing: SampleData.listings.first!, messages: SampleData.demoMessages))
-            .environmentObject(MarketplaceViewModel())
+        if let thread = SampleData.seedThreads(for: SampleData.seedListings).first {
+            MessageThreadView(thread: thread)
+                .environmentObject(MarketplaceViewModel())
+        } else if let listing = SampleData.seedListings.first {
+            MessageThreadView(thread: MessageThread(id: UUID(), listing: listing, messages: []))
+                .environmentObject(MarketplaceViewModel())
+        } else {
+            EmptyView()
+        }
     }
 }
