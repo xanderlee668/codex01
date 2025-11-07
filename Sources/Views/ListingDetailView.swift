@@ -2,8 +2,9 @@ import SwiftUI
 
 struct ListingDetailView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
-    @State private var showingMessageSheet = false
     @State private var localListing: SnowboardListing
+    @State private var activeThread: MessageThread?
+    @State private var showingFollowAlert = false
     private let listingID: UUID
 
     init(listing: SnowboardListing) {
@@ -72,21 +73,36 @@ struct ListingDetailView: View {
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Button {
-                    showingMessageSheet = true
+                    if let thread = marketplace.thread(for: localListing) {
+                        activeThread = thread
+                    } else {
+                        showingFollowAlert = true
+                    }
                 } label: {
-                    Label("联系卖家", systemImage: "message")
+                    Label("私聊", systemImage: "bubble.left.and.bubble.right.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .opacity(marketplace.canChat(with: localListing.seller) ? 1 : 0.6)
             }
         }
-        .sheet(isPresented: $showingMessageSheet) {
-            MessageThreadView(thread: marketplace.thread(for: localListing))
+        .sheet(item: $activeThread) { thread in
+            MessageThreadView(thread: thread)
                 .environmentObject(marketplace)
+        }
+        .alert("暂无法发起私聊", isPresented: $showingFollowAlert) {
+            Button("好的", role: .cancel) { showingFollowAlert = false }
+        } message: {
+            Text("需要与 \(localListing.seller.nickname) 互相关注后才能开启私聊。")
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
             localListing = updated
+        }
+        .onReceive(marketplace.$threads) { threads in
+            guard let currentID = activeThread?.id,
+                  let updated = threads.first(where: { $0.id == currentID }) else { return }
+            activeThread = updated
         }
     }
 }
@@ -109,7 +125,12 @@ private struct InfoRow: View {
 }
 
 private struct SellerCardView: View {
+    @EnvironmentObject private var marketplace: MarketplaceViewModel
     let seller: SnowboardListing.Seller
+
+    private var isFollowing: Bool { marketplace.isFollowing(seller) }
+    private var sellerFollowsCurrentUser: Bool { marketplace.sellerFollowsCurrentUser(seller) }
+    private var canChat: Bool { marketplace.canChat(with: seller) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -135,12 +156,38 @@ private struct SellerCardView: View {
                     }
                 }
                 Spacer()
+                Button {
+                    marketplace.toggleFollow(for: seller)
+                } label: {
+                    Text(isFollowing ? "已关注" : "关注")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(isFollowing ? Color(.systemGray5) : Color.accentColor.opacity(0.2))
+                        .foregroundColor(isFollowing ? .primary : .accentColor)
+                        .clipShape(Capsule())
+                }
             }
 
             Text("用心挑选器材，只为帮你找到最合适的雪板。支持面交验货，欢迎放心咨询！")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if canChat {
+                Label("已互相关注，可直接发起私聊", systemImage: "checkmark.seal.fill")
+                    .font(.caption)
+                    .foregroundColor(.accentColor)
+            } else if sellerFollowsCurrentUser {
+                Label("对方已关注你，回关即可开通私聊", systemImage: "person.2.fill")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                Label("互相关注后即可私聊沟通细节", systemImage: "bubble.left.and.bubble.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding()
         .background(.thinMaterial)
@@ -151,7 +198,7 @@ private struct SellerCardView: View {
 struct ListingDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            ListingDetailView(listing: SampleData.listings.first!)
+            ListingDetailView(listing: SampleData.seedListings.first!)
                 .environmentObject(MarketplaceViewModel())
         }
     }
