@@ -79,7 +79,7 @@ struct AddListingView: View {
             tradeOption: tradeOption,
             isFavorite: false,
             imageName: "board_custom",
-            seller: SnowboardListing.Seller(id: UUID(), nickname: "我", rating: 5.0, dealsCount: 0)
+            seller: SampleData.currentUser
         )
         marketplace.addListing(newListing)
     }

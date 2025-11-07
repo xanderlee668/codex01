@@ -2,8 +2,8 @@ import SwiftUI
 
 struct ListingDetailView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
-    @State private var showingMessageSheet = false
     @State private var localListing: SnowboardListing
+    @State private var showingContactAlert = false
     private let listingID: UUID
 
     init(listing: SnowboardListing) {
@@ -72,17 +72,18 @@ struct ListingDetailView: View {
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
                 Button {
-                    showingMessageSheet = true
+                    showingContactAlert = true
                 } label: {
-                    Label("联系卖家", systemImage: "message")
+                    Label("联系卖家", systemImage: "phone")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
             }
         }
-        .sheet(isPresented: $showingMessageSheet) {
-            MessageThreadView(thread: marketplace.thread(for: localListing))
-                .environmentObject(marketplace)
+        .alert("联系卖家", isPresented: $showingContactAlert) {
+            Button("好的", role: .cancel) { showingContactAlert = false }
+        } message: {
+            Text("请通过平台提供的联系方式或电话与卖家沟通细节。")
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
