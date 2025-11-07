@@ -5,6 +5,7 @@ struct ListingDetailView: View {
     @State private var localListing: SnowboardListing
     @State private var activeThread: MessageThread?
     @State private var showingFollowAlert = false
+    @State private var followAlertMessage: String?
     private let listingID: UUID
 
     init(listing: SnowboardListing) {
@@ -77,7 +78,7 @@ struct ListingDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .opacity(marketplace.canChat(with: localListing.seller) ? 1 : 0.6)
+                .opacity(chatStatus.canOpenThread ? 1 : 0.6)
             }
         }
         .sheet(item: $activeThread) { thread in
@@ -87,7 +88,7 @@ struct ListingDetailView: View {
         .alert("暂无法发起私聊", isPresented: $showingFollowAlert) {
             Button("好的", role: .cancel) { showingFollowAlert = false }
         } message: {
-            Text("需要与 \(localListing.seller.nickname) 互相关注后才能开启私聊。")
+            Text(followAlertMessage ?? "需要与 \(localListing.seller.nickname) 互相关注后才能开启私聊。")
         }
         .onReceive(marketplace.$listings) { listings in
             guard let updated = listings.first(where: { $0.id == listingID }) else { return }
@@ -100,10 +101,22 @@ struct ListingDetailView: View {
         }
     }
 
+    private var chatStatus: MarketplaceViewModel.ChatStatus {
+        marketplace.chatStatus(with: localListing.seller)
+    }
+
     private func openChat() {
-        if let thread = marketplace.thread(for: localListing) {
-            activeThread = thread
-        } else {
+        followAlertMessage = nil
+        switch chatStatus {
+        case .available:
+            if let thread = marketplace.thread(for: localListing) {
+                activeThread = thread
+            }
+        case .awaitingCurrentUserFollowBack:
+            followAlertMessage = "对方已经关注了你，回关即可开始聊天。"
+            showingFollowAlert = true
+        case .awaitingMutualFollow:
+            followAlertMessage = "需要先互相关注才能与 \(localListing.seller.nickname) 私聊。"
             showingFollowAlert = true
         }
     }
@@ -132,8 +145,7 @@ private struct SellerCardView: View {
     let onChat: () -> Void
 
     private var isFollowing: Bool { marketplace.isFollowing(seller) }
-    private var sellerFollowsCurrentUser: Bool { marketplace.sellerFollowsCurrentUser(seller) }
-    private var canChat: Bool { marketplace.canChat(with: seller) }
+    private var chatStatus: MarketplaceViewModel.ChatStatus { marketplace.chatStatus(with: seller) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -178,7 +190,7 @@ private struct SellerCardView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if canChat {
+            if chatStatus.canOpenThread {
                 Button(action: onChat) {
                     Label("私聊", systemImage: "bubble.left.and.bubble.right.fill")
                         .font(.subheadline)
@@ -191,7 +203,7 @@ private struct SellerCardView: View {
                 Label("已互相关注，可直接发起私聊", systemImage: "checkmark.seal.fill")
                     .font(.caption)
                     .foregroundColor(.accentColor)
-            } else if sellerFollowsCurrentUser {
+            } else if chatStatus == .awaitingCurrentUserFollowBack {
                 Label("对方已关注你，回关即可开通私聊", systemImage: "person.2.fill")
                     .font(.caption)
                     .foregroundColor(.secondary)

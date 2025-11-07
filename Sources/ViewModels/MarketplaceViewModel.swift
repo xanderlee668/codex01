@@ -2,6 +2,21 @@ import Combine
 import Foundation
 
 final class MarketplaceViewModel: ObservableObject {
+    enum ChatStatus: Equatable {
+        case available
+        case awaitingCurrentUserFollowBack
+        case awaitingMutualFollow
+
+        var canOpenThread: Bool {
+            switch self {
+            case .available:
+                return true
+            case .awaitingCurrentUserFollowBack, .awaitingMutualFollow:
+                return false
+            }
+        }
+    }
+
     @Published var listings: [SnowboardListing]
     @Published var filterText: String = ""
     @Published var selectedTradeOption: SnowboardListing.TradeOption? = nil
@@ -65,6 +80,16 @@ final class MarketplaceViewModel: ObservableObject {
 
     func canChat(with seller: SnowboardListing.Seller) -> Bool {
         isFollowing(seller) && sellerFollowsCurrentUser(seller)
+    }
+
+    func chatStatus(with seller: SnowboardListing.Seller) -> ChatStatus {
+        if canChat(with: seller) {
+            return .available
+        } else if sellerFollowsCurrentUser(seller) {
+            return .awaitingCurrentUserFollowBack
+        } else {
+            return .awaitingMutualFollow
+        }
     }
 
     func toggleFollow(for seller: SnowboardListing.Seller) {
