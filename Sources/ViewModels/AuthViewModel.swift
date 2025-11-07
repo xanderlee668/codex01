@@ -2,10 +2,10 @@ import Foundation
 import Combine
 
 final class AuthViewModel: ObservableObject {
-    @Published var isAuthenticated: Bool
-    @Published var authError: String?
-    @Published private(set) var accounts: [UserAccount]
-    @Published private(set) var currentAccount: UserAccount?
+    @Published var isAuthenticated: Bool = false
+    @Published var authError: String? = nil
+    @Published private(set) var accounts: [UserAccount] = []
+    @Published private(set) var currentAccount: UserAccount? = nil
 
     let marketplace: MarketplaceViewModel
 
