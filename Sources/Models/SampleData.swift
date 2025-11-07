@@ -7,6 +7,12 @@ enum SampleData {
         .init(id: UUID(uuidString: "73BB06E3-8095-4474-A061-8C3633F4506F")!, nickname: "老炮儿滑雪", rating: 5.0, dealsCount: 120)
     ]
 
+    /// Legacy alias kept for earlier call sites that referenced `SampleData.users`.
+    /// The app models now treat sellers and users as the same domain object so the
+    /// existing sample sellers list can backfill the previous API without forcing
+    /// a wider refactor.
+    static var users: [SnowboardListing.Seller] { sellers }
+
     static let currentUser: SnowboardListing.Seller = .init(
         id: UUID(uuidString: "BF2A2F20-46F4-4FB3-AFB1-3C79BA98E724")!,
         nickname: "我",

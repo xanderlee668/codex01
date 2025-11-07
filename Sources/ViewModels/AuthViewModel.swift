@@ -5,6 +5,10 @@ final class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool
     let marketplace: MarketplaceViewModel
 
+    var currentUser: SnowboardListing.Seller {
+        marketplace.currentUser
+    }
+
     init(
         isAuthenticated: Bool = true,
         marketplace: MarketplaceViewModel = MarketplaceViewModel()

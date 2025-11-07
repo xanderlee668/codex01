@@ -5,87 +5,83 @@ struct ListingListView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @State private var showingAddSheet = false
 
-    private var currentUserName: String {
-        auth.currentUser?.displayName ?? "未登录"
-    }
-
-    private var currentUserName: String {
-        auth.currentUser?.displayName ?? "未登录"
-    }
+    private var listings: [SnowboardListing] { marketplace.filteredListings }
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                FilterBarView()
-                    .padding(.horizontal)
-                    .padding(.top)
-
-                if marketplace.filteredListings.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "snowflake")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-                        Text("暂时没有符合条件的雪板")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding()
+            Group {
+                if listings.isEmpty {
+                    emptyState
                 } else {
                     List {
-                        ForEach(marketplace.filteredListings) { listing in
-                            NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                ListingRowView(listing: listing)
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button {
-                                    marketplace.toggleFavorite(for: listing)
-                                } label: {
-                                    Label(
-                                        listing.isFavorite ? "取消收藏" : "收藏",
-                                        systemImage: listing.isFavorite ? "heart.slash" : "heart"
-                                    )
-                                }
-                                .tint(.pink)
-                            }
-                        }
+                        filterSection
+                        listingsSection
                     }
-                    .listStyle(.plain)
+                    .listStyle(.insetGrouped)
                 }
             }
             .navigationTitle("雪板集市")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Menu {
-                        if let user = auth.currentUser {
-                            Label("交易完成：\(user.dealsCount)", systemImage: "handbag")
-                            Label(String(format: "好评率：%.1f", user.rating), systemImage: "star")
-                        }
-                        Button(role: .destructive) {
-                            auth.logout()
-                        } label: {
-                            Label("退出登录", systemImage: "rectangle.portrait.and.arrow.forward")
-                        }
-                    } label: {
-                        Label(currentUserName, systemImage: "person.crop.circle")
-                    }
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingAddSheet = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                    }
-                }
-            }
+            .toolbar { addListingToolbarItem }
             .sheet(isPresented: $showingAddSheet) {
                 AddListingView(isPresented: $showingAddSheet)
                     .environmentObject(marketplace)
                     .environmentObject(auth)
             }
         }
+    }
+
+    private var filterSection: some View {
+        Section {
+            FilterBarView()
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+        }
+    }
+
+    private var listingsSection: some View {
+        Section {
+            ForEach(listings) { listing in
+                NavigationLink(destination: ListingDetailView(listing: listing)) {
+                    ListingRowView(listing: listing)
+                }
+                .swipeActions(edge: .trailing) {
+                    Button { toggleFavorite(for: listing) } label: {
+                        Label(
+                            listing.isFavorite ? "取消收藏" : "收藏",
+                            systemImage: listing.isFavorite ? "heart.slash" : "heart"
+                        )
+                    }
+                    .tint(.pink)
+                }
+            }
+        }
+        .textCase(nil)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "snowflake")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+            Text("暂时没有符合条件的雪板")
+                .font(.headline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
+    private var addListingToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button { showingAddSheet = true } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3)
+            }
+        }
+    }
+
+    private func toggleFavorite(for listing: SnowboardListing) {
+        marketplace.toggleFavorite(for: listing)
     }
 }
 
