@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ListingDetailView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
@@ -25,15 +28,22 @@ struct ListingDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(LinearGradient(colors: [.blue.opacity(0.6), .purple.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(height: 220)
-                    .overlay(
-                        Image(systemName: "snowboard")
-                            .font(.system(size: 80))
-                            .foregroundColor(.white.opacity(0.9))
-                    )
-                    .shadow(radius: 8)
+                if !localListing.photos.isEmpty {
+                    // 详情页顶部轮播，展示所有上传的照片
+                    ListingPhotoCarousel(photos: localListing.photos)
+                        .frame(height: 260)
+                        .transition(.opacity)
+                } else {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(LinearGradient(colors: [.blue.opacity(0.6), .purple.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(height: 220)
+                        .overlay(
+                            Image(systemName: "snowboard")
+                                .font(.system(size: 80))
+                                .foregroundColor(.white.opacity(0.9))
+                        )
+                        .shadow(radius: 8)
+                }
 
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .top) {
@@ -46,12 +56,12 @@ struct ListingDetailView: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button {
-                            marketplace.toggleFavorite(for: localListing)
-                            localListing.isFavorite.toggle()
-                        } label: {
-                            Label(
-                                localListing.isFavorite ? "Saved" : "Save",
+                    Button {
+                        marketplace.toggleFavorite(for: localListing)
+                        localListing.isFavorite.toggle()
+                    } label: {
+                        Label(
+                            localListing.isFavorite ? "Saved" : "Save",
                                 systemImage: localListing.isFavorite ? "heart.fill" : "heart"
                             )
                             .labelStyle(.iconOnly)
@@ -225,6 +235,56 @@ private struct SellerCardView: View {
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+/// 顶部轮播组件，支持左右滑动浏览上传的所有照片
+private struct ListingPhotoCarousel: View {
+    let photos: [SnowboardListing.Photo]
+
+    var body: some View {
+        TabView {
+            ForEach(photos) { photo in
+                carouselImage(for: photo)
+                    .overlay(alignment: .bottomTrailing) {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.black.opacity(0.0), Color.black.opacity(0.45)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .allowsHitTesting(false)
+                    }
+            }
+        }
+        .tabViewStyle(.page)
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: Color.black.opacity(0.3), radius: 16, x: 0, y: 8)
+    }
+
+    /// 将 Data 解码为 UIImage，失败时回退到渐变占位
+    @ViewBuilder
+    private func carouselImage(for photo: SnowboardListing.Photo) -> some View {
+#if canImport(UIKit)
+        if let image = UIImage(data: photo.data) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+        } else {
+            placeholder
+        }
+#else
+        placeholder
+#endif
+    }
+
+    private var placeholder: some View {
+        LinearGradient(colors: [.blue.opacity(0.6), .purple.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 }
 

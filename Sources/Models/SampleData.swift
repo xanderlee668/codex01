@@ -20,7 +20,10 @@ enum SampleData {
                 dealsCount: 112
             ),
             followingSellerIDs: [marketplaceSellers[0].id, marketplaceSellers[1].id],
-            followersOfCurrentUser: [marketplaceSellers[0].id, marketplaceSellers[2].id]
+            followersOfCurrentUser: [marketplaceSellers[0].id, marketplaceSellers[2].id],
+            email: "alex@snowboardswap.app",
+            location: "Innsbruck, Austria",
+            bio: "Backcountry guide sharing spare gear after each season."
         ),
         UserAccount(
             id: UUID(uuidString: "87D3E9D5-57AB-4F4F-A9B2-4B2A5C43A026")!,
@@ -33,7 +36,10 @@ enum SampleData {
                 dealsCount: 64
             ),
             followingSellerIDs: [marketplaceSellers[2].id],
-            followersOfCurrentUser: [marketplaceSellers[1].id]
+            followersOfCurrentUser: [marketplaceSellers[1].id],
+            email: "sofia@snowboardswap.app",
+            location: "Munich, Germany",
+            bio: "Freestyle coach swapping boards when students outgrow them."
         )
     ]
 
@@ -57,6 +63,7 @@ enum SampleData {
             tradeOption: .faceToFace,
             isFavorite: false,
             imageName: "board_blue",
+            photos: [],
             seller: marketplaceSellers[0]
         ),
         SnowboardListing(
@@ -69,6 +76,7 @@ enum SampleData {
             tradeOption: .hybrid,
             isFavorite: true,
             imageName: "board_red",
+            photos: [],
             seller: marketplaceSellers[1]
         ),
         SnowboardListing(
@@ -81,6 +89,7 @@ enum SampleData {
             tradeOption: .courier,
             isFavorite: false,
             imageName: "board_green",
+            photos: [],
             seller: marketplaceSellers[2]
         )
     ]

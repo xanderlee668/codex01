@@ -1,6 +1,18 @@
 import Foundation
 
 struct SnowboardListing: Identifiable, Hashable {
+    // MARK: - 内部图片模型
+    /// 每条照片都保存一份本地 Data，方便列表、详情页直接解码展示。
+    struct Photo: Identifiable, Hashable {
+        let id: UUID
+        var data: Data
+
+        init(id: UUID = UUID(), data: Data) {
+            self.id = id
+            self.data = data
+        }
+    }
+
     enum Condition: String, CaseIterable, Identifiable {
         case new = "Brand New"
         case likeNew = "Like New"
@@ -27,6 +39,8 @@ struct SnowboardListing: Identifiable, Hashable {
     var tradeOption: TradeOption
     var isFavorite: Bool
     var imageName: String
+    /// 用户在发布页挑选的实际图片数据，按照上传顺序存储
+    var photos: [Photo]
     var seller: Seller
 
     struct Seller: Identifiable, Hashable {
@@ -36,6 +50,7 @@ struct SnowboardListing: Identifiable, Hashable {
         var dealsCount: Int
     }
 
+    /// 统一的英镑货币格式化，列表与详情可复用
     static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
