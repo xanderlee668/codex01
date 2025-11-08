@@ -4,6 +4,7 @@ struct ListingListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
     @EnvironmentObject private var auth: AuthViewModel
     @State private var showingAddSheet = false
+    @State private var showingProfile = false
 
     private var listings: [SnowboardListing] { marketplace.filteredListings }
 
@@ -21,10 +22,17 @@ struct ListingListView: View {
                 }
             }
             .navigationTitle("Marketplace")
-            .toolbar { addListingToolbarItem }
+            .toolbar {
+                profileToolbarItem
+                addListingToolbarItem
+            }
             .sheet(isPresented: $showingAddSheet) {
                 AddListingView(isPresented: $showingAddSheet)
                     .environmentObject(marketplace)
+                    .environmentObject(auth)
+            }
+            .sheet(isPresented: $showingProfile) {
+                ProfileView()
                     .environmentObject(auth)
             }
         }
@@ -71,6 +79,15 @@ struct ListingListView: View {
         .padding()
     }
 
+    private var profileToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button { showingProfile = true } label: {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.title3)
+            }
+        }
+    }
+
     private var addListingToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button { showingAddSheet = true } label: {
@@ -89,5 +106,6 @@ struct ListingListView_Previews: PreviewProvider {
     static var previews: some View {
         ListingListView()
             .environmentObject(MarketplaceViewModel())
+            .environmentObject(AuthViewModel())
     }
 }
