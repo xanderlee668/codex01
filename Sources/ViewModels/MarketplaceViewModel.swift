@@ -52,7 +52,7 @@ final class MarketplaceViewModel: ObservableObject {
         } else {
             self.threads = SampleData.seedThreads(for: listings, account: account)
         }
-
+/*
         if let groupTrips {
             self.groupTrips = groupTrips
         } else {
@@ -64,6 +64,25 @@ final class MarketplaceViewModel: ObservableObject {
         } else {
             self.tripThreads = SampleData.seedTripThreads(for: self.groupTrips, account: account)
         }
+      */
+        // ✅ 改成先用局部变量计算，再给 self 赋值（避免在 init 期间读取 self）
+        let groupTripsValue: [GroupTrip]
+        if let groupTrips {
+            groupTripsValue = groupTrips
+        } else {
+            groupTripsValue = SampleData.seedTrips(for: account)
+        }
+        self.groupTrips = groupTripsValue
+
+        let tripThreadsValue: [GroupTripThread]
+        if let tripThreads {
+            tripThreadsValue = tripThreads
+        } else {
+            tripThreadsValue = SampleData.seedTripThreads(for: groupTripsValue, account: account)
+        }
+        self.tripThreads = tripThreadsValue
+        
+        
     }
 
     var filteredListings: [SnowboardListing] {

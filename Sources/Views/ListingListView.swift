@@ -89,6 +89,5 @@ struct ListingListView_Previews: PreviewProvider {
     static var previews: some View {
         ListingListView()
             .environmentObject(MarketplaceViewModel())
-            .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
     }
 }

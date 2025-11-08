@@ -1,325 +1,458 @@
 // !$*UTF8*$!
 {
-archiveVersion = 1;
-classes = {};
-objectVersion = 56;
-objects = {
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
 
 /* Begin PBXBuildFile section */
-1D3E5C7B2C02105F004C4C55 /* SnowboardSwapApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C7A2C02105F004C4C55 /* SnowboardSwapApp.swift */; };
-1D3E5C7D2C02105F004C4C55 /* ListingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */; };
-1D3E5C7F2C02105F004C4C55 /* FilterBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */; };
-1D3E5C812C02105F004C4C55 /* ListingRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C802C02105F004C4C55 /* ListingRowView.swift */; };
-1D3E5C832C02105F004C4C55 /* ListingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */; };
-1D3E5C852C02105F004C4C55 /* AddListingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C842C02105F004C4C55 /* AddListingView.swift */; };
-1D3E5C892C02105F004C4C55 /* SnowboardListing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C882C02105F004C4C55 /* SnowboardListing.swift */; };
-1D3E5C8B2C02105F004C4C55 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C8A2C02105F004C4C55 /* SampleData.swift */; };
-1D3E5C8F2C02105F004C4C55 /* MarketplaceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */; };
-    AA2AC3AB2D7AF6A4006274B4 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */; };
-    AAE1C2022D8A123400A1B2C3 /* UserAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE1C2012D8A123400A1B2C3 /* UserAccount.swift */; };
-    D5B5CFD4F4BC4CC88BE7D491 /* LegacyMessageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D06358426CB44418CF39328 /* LegacyMessageModels.swift */; };
-    AA5BC1F22D7420F600F1C4B1 /* MessageThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5BC1F12D7420F600F1C4B1 /* MessageThreadView.swift */; };
-    AA2AC3AD2D7AF6BD006274B4 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2AC3AC2D7AF6BD006274B4 /* AuthView.swift */; };
-    AAE1C2092D8A128000A1B2C3 /* GroupTrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE1C2062D8A128000A1B2C3 /* GroupTrip.swift */; };
-    AAE1C20A2D8A128000A1B2C3 /* GroupTripThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE1C2072D8A128000A1B2C3 /* GroupTripThread.swift */; };
-    AAF23B141D8A128000A1B2C3 /* TripListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B101D8A128000A1B2C3 /* TripListView.swift */; };
-    AAF23B151D8A128000A1B2C3 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B111D8A128000A1B2C3 /* TripDetailView.swift */; };
-    AAF23B161D8A128000A1B2C3 /* CreateTripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B121D8A128000A1B2C3 /* CreateTripView.swift */; };
-    AAF23B171D8A128000A1B2C3 /* TripChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B131D8A128000A1B2C3 /* TripChatView.swift */; };
-1D3E5C932C02105F004C4C55 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3E5C922C02105F004C4C55 /* Assets.xcassets */; };
-1D3E5C962C02105F004C4C55 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */; };
+		1D3E5C7B2C02105F004C4C55 /* SnowboardSwapApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C7A2C02105F004C4C55 /* SnowboardSwapApp.swift */; };
+		1D3E5C7D2C02105F004C4C55 /* ListingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */; };
+		1D3E5C7F2C02105F004C4C55 /* FilterBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */; };
+		1D3E5C812C02105F004C4C55 /* ListingRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C802C02105F004C4C55 /* ListingRowView.swift */; };
+		1D3E5C832C02105F004C4C55 /* ListingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */; };
+		1D3E5C852C02105F004C4C55 /* AddListingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C842C02105F004C4C55 /* AddListingView.swift */; };
+		1D3E5C892C02105F004C4C55 /* SnowboardListing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C882C02105F004C4C55 /* SnowboardListing.swift */; };
+		1D3E5C8B2C02105F004C4C55 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C8A2C02105F004C4C55 /* SampleData.swift */; };
+		1D3E5C8F2C02105F004C4C55 /* MarketplaceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */; };
+		1D3E5C932C02105F004C4C55 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3E5C922C02105F004C4C55 /* Assets.xcassets */; };
+		1D3E5C962C02105F004C4C55 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */; };
+		AA2AC3AB2D7AF6A4006274B4 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */; };
+		AA2AC3AD2D7AF6BD006274B4 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2AC3AC2D7AF6BD006274B4 /* AuthView.swift */; };
+		AA5BC1F22D7420F600F1C4B1 /* MessageThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5BC1F12D7420F600F1C4B1 /* MessageThreadView.swift */; };
+		AAE1C2022D8A123400A1B2C3 /* UserAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE1C2012D8A123400A1B2C3 /* UserAccount.swift */; };
+		D5B5CFD4F4BC4CC88BE7D491 /* LegacyMessageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D06358426CB44418CF39328 /* LegacyMessageModels.swift */; };
+		FCE67DF92EBF91A700CE1FF7 /* GroupTrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE1C2062D8A128000A1B2C3 /* GroupTrip.swift */; };
+		FCE67DFA2EBF91AE00CE1FF7 /* GroupTripThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE1C2072D8A128000A1B2C3 /* GroupTripThread.swift */; };
+		FCE67DFB2EBF91C200CE1FF7 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B111D8A128000A1B2C3 /* TripDetailView.swift */; };
+		FCE67DFC2EBF91C900CE1FF7 /* TripListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B101D8A128000A1B2C3 /* TripListView.swift */; };
+		FCE67DFD2EBF91CF00CE1FF7 /* TripChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B131D8A128000A1B2C3 /* TripChatView.swift */; };
+		FCE67DFE2EBF91D900CE1FF7 /* CreateTripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF23B121D8A128000A1B2C3 /* CreateTripView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-1D3E5C742C02105F004C4C55 /* SnowboardSwap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnowboardSwap.app; sourceTree = BUILT_PRODUCTS_DIR; };
-1D3E5C7A2C02105F004C4C55 /* SnowboardSwapApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowboardSwapApp.swift; sourceTree = "<group>"; };
-1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingListView.swift; sourceTree = "<group>"; };
-1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBarView.swift; sourceTree = "<group>"; };
-1D3E5C802C02105F004C4C55 /* ListingRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingRowView.swift; sourceTree = "<group>"; };
-1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetailView.swift; sourceTree = "<group>"; };
-1D3E5C842C02105F004C4C55 /* AddListingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddListingView.swift; sourceTree = "<group>"; };
-1D3E5C882C02105F004C4C55 /* SnowboardListing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowboardListing.swift; sourceTree = "<group>"; };
-1D3E5C8A2C02105F004C4C55 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
-    1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketplaceViewModel.swift; sourceTree = "<group>"; };
-    0D06358426CB44418CF39328 /* LegacyMessageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMessageModels.swift; sourceTree = "<group>"; };
-    AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
-    AAE1C2012D8A123400A1B2C3 /* UserAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAccount.swift; sourceTree = "<group>"; };
-    AAE1C2062D8A128000A1B2C3 /* GroupTrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTrip.swift; sourceTree = "<group>"; };
-    AAE1C2072D8A128000A1B2C3 /* GroupTripThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTripThread.swift; sourceTree = "<group>"; };
-    AAF23B101D8A128000A1B2C3 /* TripListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripListView.swift; sourceTree = "<group>"; };
-    AAF23B111D8A128000A1B2C3 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
-    AAF23B121D8A128000A1B2C3 /* CreateTripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTripView.swift; sourceTree = "<group>"; };
-    AAF23B131D8A128000A1B2C3 /* TripChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripChatView.swift; sourceTree = "<group>"; };
-    AA5BC1F12D7420F600F1C4B1 /* MessageThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageThreadView.swift; sourceTree = "<group>"; };
-    AA2AC3AC2D7AF6BD006274B4 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
-1D3E5C922C02105F004C4C55 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-1D3E5C942C02105F004C4C55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		0D06358426CB44418CF39328 /* LegacyMessageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMessageModels.swift; sourceTree = "<group>"; };
+		1D3E5C742C02105F004C4C55 /* SnowboardSwap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnowboardSwap.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D3E5C7A2C02105F004C4C55 /* SnowboardSwapApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowboardSwapApp.swift; sourceTree = "<group>"; };
+		1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingListView.swift; sourceTree = "<group>"; };
+		1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterBarView.swift; sourceTree = "<group>"; };
+		1D3E5C802C02105F004C4C55 /* ListingRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingRowView.swift; sourceTree = "<group>"; };
+		1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetailView.swift; sourceTree = "<group>"; };
+		1D3E5C842C02105F004C4C55 /* AddListingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddListingView.swift; sourceTree = "<group>"; };
+		1D3E5C882C02105F004C4C55 /* SnowboardListing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowboardListing.swift; sourceTree = "<group>"; };
+		1D3E5C8A2C02105F004C4C55 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
+		1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketplaceViewModel.swift; sourceTree = "<group>"; };
+		1D3E5C922C02105F004C4C55 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1D3E5C942C02105F004C4C55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		AA2AC3AC2D7AF6BD006274B4 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		AA5BC1F12D7420F600F1C4B1 /* MessageThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageThreadView.swift; sourceTree = "<group>"; };
+		AAE1C2012D8A123400A1B2C3 /* UserAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAccount.swift; sourceTree = "<group>"; };
+		AAE1C2062D8A128000A1B2C3 /* GroupTrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTrip.swift; sourceTree = "<group>"; };
+		AAE1C2072D8A128000A1B2C3 /* GroupTripThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTripThread.swift; sourceTree = "<group>"; };
+		AAF23B101D8A128000A1B2C3 /* TripListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripListView.swift; sourceTree = "<group>"; };
+		AAF23B111D8A128000A1B2C3 /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
+		AAF23B121D8A128000A1B2C3 /* CreateTripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTripView.swift; sourceTree = "<group>"; };
+		AAF23B131D8A128000A1B2C3 /* TripChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripChatView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-1D3E5C712C02105F004C4C55 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (
-); runOnlyForDeploymentPostprocessing = 0; };
+		1D3E5C712C02105F004C4C55 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-1D3E5C6B2C02105F004C4C55 = {isa = PBXGroup; children = (
-1D3E5C762C02105F004C4C55 /* SnowboardSwap */,
-1D3E5C912C02105F004C4C55 /* Resources */,
-1D3E5C982C02105F004C4C55 /* Preview Content */,
-1D3E5C752C02105F004C4C55 /* Products */,
-); sourceTree = "<group>"; };
-1D3E5C752C02105F004C4C55 /* Products */ = {isa = PBXGroup; children = (
-1D3E5C742C02105F004C4C55 /* SnowboardSwap.app */,
-); name = Products; sourceTree = "<group>"; };
-1D3E5C762C02105F004C4C55 /* SnowboardSwap */ = {isa = PBXGroup; children = (
-1D3E5C7A2C02105F004C4C55 /* SnowboardSwapApp.swift */,
-1D3E5C972C02105F004C4C55 /* Models */,
-1D3E5C9B2C02105F004C4C55 /* ViewModels */,
-1D3E5C9D2C02105F004C4C55 /* Views */,
-); name = SnowboardSwap; path = Sources; sourceTree = "<group>"; };
-1D3E5C912C02105F004C4C55 /* Resources */ = {isa = PBXGroup; children = (
-1D3E5C922C02105F004C4C55 /* Assets.xcassets */,
-1D3E5C942C02105F004C4C55 /* Info.plist */,
-); path = Resources; sourceTree = "<group>"; };
-1D3E5C972C02105F004C4C55 /* Models */ = {isa = PBXGroup; children = (
-            1D3E5C882C02105F004C4C55 /* SnowboardListing.swift */,
-            1D3E5C8A2C02105F004C4C55 /* SampleData.swift */,
-            AAE1C2012D8A123400A1B2C3 /* UserAccount.swift */,
-            AAE1C2062D8A128000A1B2C3 /* GroupTrip.swift */,
-            AAE1C2072D8A128000A1B2C3 /* GroupTripThread.swift */,
-            0D06358426CB44418CF39328 /* LegacyMessageModels.swift */,
-        ); path = Models; sourceTree = "<group>"; };
-1D3E5C982C02105F004C4C55 /* Preview Content */ = {isa = PBXGroup; children = (
-1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */,
-); path = "Preview Content"; sourceTree = "<group>"; };
-1D3E5C9B2C02105F004C4C55 /* ViewModels */ = {isa = PBXGroup; children = (
-1DF2E0012C0B568600F4E1D4 /* AuthViewModel.swift */,
-1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */,
-            AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */,
-        ); path = ViewModels; sourceTree = "<group>"; };
-1D3E5C9D2C02105F004C4C55 /* Views */ = {isa = PBXGroup; children = (
-1DF2E0032C0B568600F4E1D4 /* AuthView.swift */,
-1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */,
-1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */,
-1D3E5C802C02105F004C4C55 /* ListingRowView.swift */,
-1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */,
-1D3E5C842C02105F004C4C55 /* AddListingView.swift */,
-            AA5BC1F12D7420F600F1C4B1 /* MessageThreadView.swift */,
-            AAF23B101D8A128000A1B2C3 /* TripListView.swift */,
-            AAF23B111D8A128000A1B2C3 /* TripDetailView.swift */,
-            AAF23B121D8A128000A1B2C3 /* CreateTripView.swift */,
-            AAF23B131D8A128000A1B2C3 /* TripChatView.swift */,
-            AA2AC3AC2D7AF6BD006274B4 /* AuthView.swift */,
-        ); path = Views; sourceTree = "<group>"; };
+		1D3E5C6B2C02105F004C4C55 = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C762C02105F004C4C55 /* SnowboardSwap */,
+				1D3E5C912C02105F004C4C55 /* Resources */,
+				1D3E5C982C02105F004C4C55 /* Preview Content */,
+				1D3E5C752C02105F004C4C55 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1D3E5C752C02105F004C4C55 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C742C02105F004C4C55 /* SnowboardSwap.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1D3E5C762C02105F004C4C55 /* SnowboardSwap */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C7A2C02105F004C4C55 /* SnowboardSwapApp.swift */,
+				1D3E5C972C02105F004C4C55 /* Models */,
+				1D3E5C9B2C02105F004C4C55 /* ViewModels */,
+				1D3E5C9D2C02105F004C4C55 /* Views */,
+			);
+			name = SnowboardSwap;
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		1D3E5C912C02105F004C4C55 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C922C02105F004C4C55 /* Assets.xcassets */,
+				1D3E5C942C02105F004C4C55 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		1D3E5C972C02105F004C4C55 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C882C02105F004C4C55 /* SnowboardListing.swift */,
+				1D3E5C8A2C02105F004C4C55 /* SampleData.swift */,
+				AAE1C2012D8A123400A1B2C3 /* UserAccount.swift */,
+				AAE1C2062D8A128000A1B2C3 /* GroupTrip.swift */,
+				AAE1C2072D8A128000A1B2C3 /* GroupTripThread.swift */,
+				0D06358426CB44418CF39328 /* LegacyMessageModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1D3E5C982C02105F004C4C55 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		1D3E5C9B2C02105F004C4C55 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */,
+				AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		1D3E5C9D2C02105F004C4C55 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */,
+				1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */,
+				1D3E5C802C02105F004C4C55 /* ListingRowView.swift */,
+				1D3E5C822C02105F004C4C55 /* ListingDetailView.swift */,
+				1D3E5C842C02105F004C4C55 /* AddListingView.swift */,
+				AA5BC1F12D7420F600F1C4B1 /* MessageThreadView.swift */,
+				AAF23B101D8A128000A1B2C3 /* TripListView.swift */,
+				AAF23B111D8A128000A1B2C3 /* TripDetailView.swift */,
+				AAF23B121D8A128000A1B2C3 /* CreateTripView.swift */,
+				AAF23B131D8A128000A1B2C3 /* TripChatView.swift */,
+				AA2AC3AC2D7AF6BD006274B4 /* AuthView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-1D3E5C732C02105F004C4C55 /* SnowboardSwap */ = {isa = PBXNativeTarget; buildConfigurationList = 1D3E5CA12C02105F004C4C55 /* Build configuration list for PBXNativeTarget "SnowboardSwap" */; buildPhases = (
-1D3E5C702C02105F004C4C55 /* Sources */,
-1D3E5C712C02105F004C4C55 /* Frameworks */,
-1D3E5C722C02105F004C4C55 /* Resources */,
-); buildRules = (
-); dependencies = (
-); name = SnowboardSwap; productName = SnowboardSwap; productReference = 1D3E5C742C02105F004C4C55 /* SnowboardSwap.app */; productType = "com.apple.product-type.application"; };
+		1D3E5C732C02105F004C4C55 /* SnowboardSwap */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D3E5CA12C02105F004C4C55 /* Build configuration list for PBXNativeTarget "SnowboardSwap" */;
+			buildPhases = (
+				1D3E5C702C02105F004C4C55 /* Sources */,
+				1D3E5C712C02105F004C4C55 /* Frameworks */,
+				1D3E5C722C02105F004C4C55 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SnowboardSwap;
+			productName = SnowboardSwap;
+			productReference = 1D3E5C742C02105F004C4C55 /* SnowboardSwap.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-1D3E5C6C2C02105F004C4C55 /* Project object */ = {isa = PBXProject; attributes = {
-BuildIndependentTargetsInParallel = 1;
-LastSwiftUpdateCheck = 1500;
-LastUpgradeCheck = 1500;
-TargetAttributes = {
-1D3E5C732C02105F004C4C55 = {
-CreatedOnToolsVersion = 15.0;
-};
-};
-}; buildConfigurationList = 1D3E5C6F2C02105F004C4C55 /* Build configuration list for PBXProject "SnowboardSwap" */; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (
-en,
-Base,
-); mainGroup = 1D3E5C6B2C02105F004C4C55; productRefGroup = 1D3E5C752C02105F004C4C55 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (
-1D3E5C732C02105F004C4C55 /* SnowboardSwap */,
-); };
+		1D3E5C6C2C02105F004C4C55 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					1D3E5C732C02105F004C4C55 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 1D3E5C6F2C02105F004C4C55 /* Build configuration list for PBXProject "SnowboardSwap" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1D3E5C6B2C02105F004C4C55;
+			productRefGroup = 1D3E5C752C02105F004C4C55 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1D3E5C732C02105F004C4C55 /* SnowboardSwap */,
+			);
+		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-1D3E5C722C02105F004C4C55 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (
-1D3E5C932C02105F004C4C55 /* Assets.xcassets in Resources */,
-1D3E5C962C02105F004C4C55 /* Preview Assets.xcassets in Resources */,
-); runOnlyForDeploymentPostprocessing = 0; };
+		1D3E5C722C02105F004C4C55 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D3E5C932C02105F004C4C55 /* Assets.xcassets in Resources */,
+				1D3E5C962C02105F004C4C55 /* Preview Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-1D3E5C702C02105F004C4C55 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
-1D3E5C7B2C02105F004C4C55 /* SnowboardSwapApp.swift in Sources */,
-1D3E5C7D2C02105F004C4C55 /* ListingListView.swift in Sources */,
-1D3E5C7F2C02105F004C4C55 /* FilterBarView.swift in Sources */,
-1D3E5C812C02105F004C4C55 /* ListingRowView.swift in Sources */,
-1D3E5C832C02105F004C4C55 /* ListingDetailView.swift in Sources */,
-1D3E5C852C02105F004C4C55 /* AddListingView.swift in Sources */,
-            1D3E5C892C02105F004C4C55 /* SnowboardListing.swift in Sources */,
-            1D3E5C8B2C02105F004C4C55 /* SampleData.swift in Sources */,
-            AAE1C2022D8A123400A1B2C3 /* UserAccount.swift in Sources */,
-            1D3E5C8F2C02105F004C4C55 /* MarketplaceViewModel.swift in Sources */,
-            D5B5CFD4F4BC4CC88BE7D491 /* LegacyMessageModels.swift in Sources */,
-            AA5BC1F22D7420F600F1C4B1 /* MessageThreadView.swift in Sources */,
-            AA2AC3AB2D7AF6A4006274B4 /* AuthViewModel.swift in Sources */,
-            AA2AC3AD2D7AF6BD006274B4 /* AuthView.swift in Sources */,
-        ); runOnlyForDeploymentPostprocessing = 0; };
+		1D3E5C702C02105F004C4C55 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D3E5C7B2C02105F004C4C55 /* SnowboardSwapApp.swift in Sources */,
+				1D3E5C7D2C02105F004C4C55 /* ListingListView.swift in Sources */,
+				1D3E5C7F2C02105F004C4C55 /* FilterBarView.swift in Sources */,
+				1D3E5C812C02105F004C4C55 /* ListingRowView.swift in Sources */,
+				FCE67DFD2EBF91CF00CE1FF7 /* TripChatView.swift in Sources */,
+				FCE67DFA2EBF91AE00CE1FF7 /* GroupTripThread.swift in Sources */,
+				1D3E5C832C02105F004C4C55 /* ListingDetailView.swift in Sources */,
+				1D3E5C852C02105F004C4C55 /* AddListingView.swift in Sources */,
+				1D3E5C892C02105F004C4C55 /* SnowboardListing.swift in Sources */,
+				FCE67DFE2EBF91D900CE1FF7 /* CreateTripView.swift in Sources */,
+				1D3E5C8B2C02105F004C4C55 /* SampleData.swift in Sources */,
+				AAE1C2022D8A123400A1B2C3 /* UserAccount.swift in Sources */,
+				1D3E5C8F2C02105F004C4C55 /* MarketplaceViewModel.swift in Sources */,
+				FCE67DFB2EBF91C200CE1FF7 /* TripDetailView.swift in Sources */,
+				FCE67DF92EBF91A700CE1FF7 /* GroupTrip.swift in Sources */,
+				D5B5CFD4F4BC4CC88BE7D491 /* LegacyMessageModels.swift in Sources */,
+				AA5BC1F22D7420F600F1C4B1 /* MessageThreadView.swift in Sources */,
+				FCE67DFC2EBF91C900CE1FF7 /* TripListView.swift in Sources */,
+				AA2AC3AB2D7AF6A4006274B4 /* AuthViewModel.swift in Sources */,
+				AA2AC3AD2D7AF6BD006274B4 /* AuthView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-1D3E5C9F2C02105F004C4C55 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
-ALWAYS_SEARCH_USER_PATHS = NO;
-ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-CLANG_ANALYZER_NONNULL = YES;
-CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-CLANG_ENABLE_MODULES = YES;
-CLANG_ENABLE_OBJC_ARC = YES;
-CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-CLANG_WARN_BOOL_CONVERSION = YES;
-CLANG_WARN_COMMA = YES;
-CLANG_WARN_CONSTANT_CONVERSION = YES;
-CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-CLANG_WARN_EMPTY_BODY = YES;
-CLANG_WARN_ENUM_CONVERSION = YES;
-CLANG_WARN_INFINITE_RECURSION = YES;
-CLANG_WARN_INT_CONVERSION = YES;
-CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-CLANG_WARN_STRICT_PROTOTYPES = YES;
-CLANG_WARN_SUSPICIOUS_MOVE = YES;
-CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-CODE_SIGN_IDENTITY = "";
-CODE_SIGN_STYLE = Automatic;
-CURRENT_PROJECT_VERSION = 1;
-DEVELOPMENT_TEAM = "";
-ENABLE_PREVIEWS = YES;
-GENERATE_INFOPLIST_FILE = NO;
-               INFOPLIST_FILE = Resources/Info.plist;
-INFOPLIST_KEY_CFBundleDisplayName = "Snowboard Swap";
-INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-LD_RUNPATH_SEARCH_PATHS = (
-"$(inherited)",
-"@executable_path/Frameworks",
-);
-MARKETING_VERSION = 1.0;
-PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
-PRODUCT_NAME = "$(TARGET_NAME)";
-SDKROOT = iphoneos;
-SWIFT_EMIT_LOC_STRINGS = YES;
-SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-SWIFT_VERSION = 5.0;
-TARGETED_DEVICE_FAMILY = "1,2";
-}; name = Debug; };
-1D3E5CA02C02105F004C4C55 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
-ALWAYS_SEARCH_USER_PATHS = NO;
-ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-CLANG_ANALYZER_NONNULL = YES;
-CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-CLANG_ENABLE_MODULES = YES;
-CLANG_ENABLE_OBJC_ARC = YES;
-CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-CLANG_WARN_BOOL_CONVERSION = YES;
-CLANG_WARN_COMMA = YES;
-CLANG_WARN_CONSTANT_CONVERSION = YES;
-CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-CLANG_WARN_EMPTY_BODY = YES;
-CLANG_WARN_ENUM_CONVERSION = YES;
-CLANG_WARN_INFINITE_RECURSION = YES;
-CLANG_WARN_INT_CONVERSION = YES;
-CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-CLANG_WARN_STRICT_PROTOTYPES = YES;
-CLANG_WARN_SUSPICIOUS_MOVE = YES;
-CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-CODE_SIGN_IDENTITY = "";
-CODE_SIGN_STYLE = Automatic;
-CURRENT_PROJECT_VERSION = 1;
-DEVELOPMENT_TEAM = "";
-ENABLE_PREVIEWS = YES;
-GENERATE_INFOPLIST_FILE = NO;
-               INFOPLIST_FILE = Resources/Info.plist;
-INFOPLIST_KEY_CFBundleDisplayName = "Snowboard Swap";
-INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-LD_RUNPATH_SEARCH_PATHS = (
-"$(inherited)",
-"@executable_path/Frameworks",
-);
-MARKETING_VERSION = 1.0;
-PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
-PRODUCT_NAME = "$(TARGET_NAME)";
-SDKROOT = iphoneos;
-SWIFT_EMIT_LOC_STRINGS = YES;
-SWIFT_OPTIMIZATION_LEVEL = "-O";
-SWIFT_VERSION = 5.0;
-TARGETED_DEVICE_FAMILY = "1,2";
-}; name = Release; };
-1D3E5CA22C02105F004C4C55 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
-ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-CODE_SIGN_STYLE = Automatic;
-DEVELOPMENT_TEAM = "";
-               INFOPLIST_FILE = Resources/Info.plist;
-IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-LD_RUNPATH_SEARCH_PATHS = (
-"$(inherited)",
-"@executable_path/Frameworks",
-);
-PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
-PRODUCT_NAME = "$(TARGET_NAME)";
-SWIFT_VERSION = 5.0;
-TARGETED_DEVICE_FAMILY = "1,2";
-}; name = Debug; };
-1D3E5CA32C02105F004C4C55 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
-ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-CODE_SIGN_STYLE = Automatic;
-DEVELOPMENT_TEAM = "";
-               INFOPLIST_FILE = Resources/Info.plist;
-IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-LD_RUNPATH_SEARCH_PATHS = (
-"$(inherited)",
-"@executable_path/Frameworks",
-);
-PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
-PRODUCT_NAME = "$(TARGET_NAME)";
-SWIFT_VERSION = 5.0;
-TARGETED_DEVICE_FAMILY = "1,2";
-}; name = Release; };
+		1D3E5C9F2C02105F004C4C55 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Snowboard Swap";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1D3E5CA02C02105F004C4C55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Snowboard Swap";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		1D3E5CA22C02105F004C4C55 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1D3E5CA32C02105F004C4C55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SnowboardSwap;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-1D3E5C6F2C02105F004C4C55 /* Build configuration list for PBXProject "SnowboardSwap" */ = {isa = XCConfigurationList; buildConfigurations = (
-1D3E5C9F2C02105F004C4C55 /* Debug */,
-1D3E5CA02C02105F004C4C55 /* Release */,
-); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-1D3E5CA12C02105F004C4C55 /* Build configuration list for PBXNativeTarget "SnowboardSwap" */ = {isa = XCConfigurationList; buildConfigurations = (
-1D3E5CA22C02105F004C4C55 /* Debug */,
-1D3E5CA32C02105F004C4C55 /* Release */,
-); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		1D3E5C6F2C02105F004C4C55 /* Build configuration list for PBXProject "SnowboardSwap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D3E5C9F2C02105F004C4C55 /* Debug */,
+				1D3E5CA02C02105F004C4C55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1D3E5CA12C02105F004C4C55 /* Build configuration list for PBXNativeTarget "SnowboardSwap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D3E5CA22C02105F004C4C55 /* Debug */,
+				1D3E5CA32C02105F004C4C55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
-
-};
-rootObject = 1D3E5C6C2C02105F004C4C55 /* Project object */;
+	};
+	rootObject = 1D3E5C6C2C02105F004C4C55 /* Project object */;
 }
