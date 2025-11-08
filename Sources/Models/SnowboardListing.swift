@@ -1,6 +1,16 @@
 import Foundation
 
 struct SnowboardListing: Identifiable, Hashable {
+    struct Photo: Identifiable, Hashable {
+        let id: UUID
+        var data: Data
+
+        init(id: UUID = UUID(), data: Data) {
+            self.id = id
+            self.data = data
+        }
+    }
+
     enum Condition: String, CaseIterable, Identifiable {
         case new = "Brand New"
         case likeNew = "Like New"
@@ -27,6 +37,7 @@ struct SnowboardListing: Identifiable, Hashable {
     var tradeOption: TradeOption
     var isFavorite: Bool
     var imageName: String
+    var photos: [Photo]
     var seller: Seller
 
     struct Seller: Identifiable, Hashable {

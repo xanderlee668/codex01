@@ -52,10 +52,15 @@ struct ListingListView: View {
                 addListingToolbarItem
             }
             .sheet(isPresented: $showingAddSheet) {
-                AddListingView(isPresented: $showingAddSheet)
-                    .environmentObject(marketplace)
-                    .environmentObject(auth)
-                    .preferredColorScheme(.dark)
+                if #available(iOS 16.0, *) {
+                    AddListingView(isPresented: $showingAddSheet)
+                        .environmentObject(marketplace)
+                        .environmentObject(auth)
+                        .preferredColorScheme(.dark)
+                } else {
+                    LegacyAddListingPlaceholder(isPresented: $showingAddSheet)
+                        .preferredColorScheme(.dark)
+                }
             }
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
@@ -110,6 +115,37 @@ struct ListingListView: View {
 
     private func toggleFavorite(for listing: SnowboardListing) {
         marketplace.toggleFavorite(for: listing)
+    }
+}
+
+private struct LegacyAddListingPlaceholder: View {
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 18) {
+                Image(systemName: "photo")
+                    .font(.system(size: 48))
+                    .foregroundColor(.white.opacity(0.7))
+                Text("Update required")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Text("Photo uploads require iOS 16 or later. Update your device to share gear snapshots.")
+                    .multilineTextAlignment(.center)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.7))
+                    .padding(.horizontal)
+                Button("Close") {
+                    isPresented = false
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.accentColor)
+            }
+            .padding(32)
+            .background(NightGradientBackground())
+            .navigationTitle("Add listing")
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 }
 

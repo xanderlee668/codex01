@@ -63,6 +63,7 @@ enum SampleData {
             tradeOption: .faceToFace,
             isFavorite: false,
             imageName: "board_blue",
+            photos: [],
             seller: marketplaceSellers[0]
         ),
         SnowboardListing(
@@ -75,6 +76,7 @@ enum SampleData {
             tradeOption: .hybrid,
             isFavorite: true,
             imageName: "board_red",
+            photos: [],
             seller: marketplaceSellers[1]
         ),
         SnowboardListing(
@@ -87,6 +89,7 @@ enum SampleData {
             tradeOption: .courier,
             isFavorite: false,
             imageName: "board_green",
+            photos: [],
             seller: marketplaceSellers[2]
         )
     ]
