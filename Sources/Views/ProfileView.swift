@@ -27,9 +27,17 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                personalInformationSection
-                changePasswordSection
+            ZStack {
+                NightGradientBackground()
+
+                ScrollView {
+                    VStack(spacing: 26) {
+                        personalInformationCard
+                        changePasswordCard
+                    }
+                    .padding(.vertical, 40)
+                    .padding(.horizontal, 24)
+                }
             }
             .navigationTitle("Profile")
             .onAppear(perform: populateFields)
@@ -37,55 +45,132 @@ struct ProfileView: View {
                 populateFields()
             }
         }
+        .preferredColorScheme(.dark)
     }
 
-    private var personalInformationSection: some View {
-        Section(header: Text("Personal Information")) {
-            TextField("Display Name", text: $displayName)
-            TextField("Email", text: $email)
-                .keyboardType(.emailAddress)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            TextField("Location", text: $location)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Bio")
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                TextEditor(text: $bio)
-                    .frame(minHeight: 120)
+    private var personalInformationCard: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Personal Information")
+                .font(.title3.weight(.semibold))
+                .foregroundColor(.white)
+
+            VStack(spacing: 16) {
+                glassField(title: "Display Name", text: $displayName)
+
+                glassField(title: "Email", text: $email, keyboard: .emailAddress, autocapitalization: .never)
+
+                glassField(title: "Location", text: $location)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Bio")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.75))
+
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.08))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                            )
+
+                        TextEditor(text: $bio)
+                            .scrollContentBackground(.hidden)
+                            .background(Color.clear)
+                            .frame(minHeight: 140)
+                            .padding(10)
+                            .foregroundColor(.white)
+                    }
+                }
             }
 
             if let message = infoMessage {
                 Text(message.message)
                     .font(.footnote)
-                    .foregroundColor(message.kind == .error ? .red : .green)
+                    .foregroundColor(message.kind == .error ? Color.red.opacity(0.9) : Color.green.opacity(0.9))
             }
 
             Button("Save Changes", action: saveProfile)
+                .buttonStyle(PrimaryGlassButtonStyle())
+                .opacity(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.6 : 1)
                 .disabled(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
+        .nightGlassCard()
     }
 
-    private var changePasswordSection: some View {
-        Section(header: Text("Change Password")) {
-            SecureField("Current Password", text: $currentPassword)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            SecureField("New Password", text: $newPassword)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            SecureField("Confirm New Password", text: $confirmPassword)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
+    private var changePasswordCard: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Change Password")
+                .font(.title3.weight(.semibold))
+                .foregroundColor(.white)
+
+            VStack(spacing: 16) {
+                glassSecureField(title: "Current Password", text: $currentPassword)
+                glassSecureField(title: "New Password", text: $newPassword)
+                glassSecureField(title: "Confirm New Password", text: $confirmPassword)
+            }
 
             if let message = passwordMessage {
                 Text(message.message)
                     .font(.footnote)
-                    .foregroundColor(message.kind == .error ? .red : .green)
+                    .foregroundColor(message.kind == .error ? Color.red.opacity(0.9) : Color.green.opacity(0.9))
             }
 
             Button("Update Password", action: updatePassword)
+                .buttonStyle(PrimaryGlassButtonStyle())
+                .opacity((currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) ? 0.6 : 1)
                 .disabled(currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty)
+        }
+        .nightGlassCard()
+    }
+
+    private func glassField(
+        title: String,
+        text: Binding<String>,
+        keyboard: UIKeyboardType = .default,
+        autocapitalization: TextInputAutocapitalization = .sentences
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.75))
+
+            TextField(title, text: text)
+                .keyboardType(keyboard)
+                .textInputAutocapitalization(autocapitalization)
+                .autocorrectionDisabled(autocapitalization == .never)
+                .foregroundColor(.white)
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        )
+                )
+        }
+    }
+
+    private func glassSecureField(title: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.75))
+
+            SecureField(title, text: text)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .foregroundColor(.white)
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        )
+                )
         }
     }
 

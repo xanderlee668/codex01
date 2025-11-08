@@ -10,15 +10,40 @@ struct ListingListView: View {
 
     var body: some View {
         NavigationView {
-            Group {
-                if listings.isEmpty {
-                    emptyState
-                } else {
-                    List {
-                        filterSection
-                        listingsSection
+            ZStack {
+                NightGradientBackground()
+
+                Group {
+                    if listings.isEmpty {
+                        emptyState
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: 22) {
+                                filterSection
+
+                                ForEach(listings) { listing in
+                                    NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                        ListingRowView(listing: listing) {
+                                            toggleFavorite(for: listing)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .contextMenu {
+                                        Button(role: nil) {
+                                            toggleFavorite(for: listing)
+                                        } label: {
+                                            Label(
+                                                listing.isFavorite ? "Unfavourite" : "Favourite",
+                                                systemImage: listing.isFavorite ? "heart.slash" : "heart"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 32)
+                            .padding(.horizontal, 20)
+                        }
                     }
-                    .listStyle(.insetGrouped)
                 }
             }
             .navigationTitle("Marketplace")
@@ -30,53 +55,51 @@ struct ListingListView: View {
                 AddListingView(isPresented: $showingAddSheet)
                     .environmentObject(marketplace)
                     .environmentObject(auth)
+                    .preferredColorScheme(.dark)
+            }
+            .sheet(isPresented: $showingProfile) {
+                ProfileView()
+                    .environmentObject(auth)
+                    .preferredColorScheme(.dark)
             }
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
                     .environmentObject(auth)
             }
         }
+        .preferredColorScheme(.dark)
     }
 
     private var filterSection: some View {
-        Section {
-            FilterBarView()
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-        }
-    }
-
-    private var listingsSection: some View {
-        Section {
-            ForEach(listings) { listing in
-                NavigationLink(destination: ListingDetailView(listing: listing)) {
-                    ListingRowView(listing: listing)
-                }
-                .swipeActions(edge: .trailing) {
-                    Button { toggleFavorite(for: listing) } label: {
-                        Label(
-                            listing.isFavorite ? "Unfavourite" : "Favourite",
-                            systemImage: listing.isFavorite ? "heart.slash" : "heart"
-                        )
-                    }
-                    .tint(.pink)
-                }
-            }
-        }
-        .textCase(nil)
+        FilterBarView()
+            .nightGlassCard()
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 18) {
             Image(systemName: "snowflake")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .font(.system(size: 56))
+                .foregroundColor(.white.opacity(0.7))
             Text("No boards match your filters")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.white.opacity(0.8))
+            Text("Adjust your filters or clear them to see more listings.")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .nightGlassCard(padding: 28)
+        .padding(.horizontal, 32)
+    }
+
+    private var profileToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button { showingProfile = true } label: {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.title3)
+            }
+            .buttonStyle(IconGlassButtonStyle())
+        }
     }
 
     private var profileToolbarItem: some ToolbarContent {
@@ -94,6 +117,7 @@ struct ListingListView: View {
                 Image(systemName: "plus.circle.fill")
                     .font(.title3)
             }
+            .buttonStyle(IconGlassButtonStyle())
         }
     }
 

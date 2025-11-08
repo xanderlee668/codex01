@@ -4,19 +4,26 @@ struct FilterBarView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.65))
                 TextField("Search boards, locations or sellers", text: $marketplace.filterText)
                     .textInputAutocapitalization(.never)
+                    .foregroundColor(.white)
             }
-            .padding(10)
-            .background(.thinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    )
+            )
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     PickerChipView(title: "All trade options", isSelected: marketplace.selectedTradeOption == nil) {
                         marketplace.selectedTradeOption = nil
                     }
@@ -31,10 +38,11 @@ struct FilterBarView: View {
                         }
                     }
                 }
+                .padding(.horizontal, 2)
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     PickerChipView(title: "All conditions", isSelected: marketplace.selectedCondition == nil) {
                         marketplace.selectedCondition = nil
                     }
@@ -49,8 +57,10 @@ struct FilterBarView: View {
                         }
                     }
                 }
+                .padding(.horizontal, 2)
             }
         }
+        .foregroundColor(.white)
     }
 }
 
@@ -62,14 +72,9 @@ private struct PickerChipView: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.subheadline)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 12)
-                .background(isSelected ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
-                .foregroundColor(isSelected ? Color.accentColor : .primary)
-                .clipShape(Capsule())
+                .font(.subheadline.weight(.medium))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ChipGlassButtonStyle(isSelected: isSelected))
     }
 }
 
