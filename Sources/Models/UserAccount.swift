@@ -7,4 +7,7 @@ struct UserAccount: Identifiable, Hashable {
     var seller: SnowboardListing.Seller
     var followingSellerIDs: Set<UUID>
     var followersOfCurrentUser: Set<UUID>
+    var email: String = ""
+    var location: String = ""
+    var bio: String = ""
 }

@@ -23,7 +23,11 @@ struct FilterBarView: View {
 
                     ForEach(SnowboardListing.TradeOption.allCases) { option in
                         PickerChipView(title: option.rawValue, isSelected: marketplace.selectedTradeOption == option) {
-                            marketplace.selectedTradeOption = option
+                            if marketplace.selectedTradeOption == option {
+                                marketplace.selectedTradeOption = nil
+                            } else {
+                                marketplace.selectedTradeOption = option
+                            }
                         }
                     }
                 }
@@ -37,7 +41,11 @@ struct FilterBarView: View {
 
                     ForEach(SnowboardListing.Condition.allCases) { condition in
                         PickerChipView(title: condition.rawValue, isSelected: marketplace.selectedCondition == condition) {
-                            marketplace.selectedCondition = condition
+                            if marketplace.selectedCondition == condition {
+                                marketplace.selectedCondition = nil
+                            } else {
+                                marketplace.selectedCondition = condition
+                            }
                         }
                     }
                 }
