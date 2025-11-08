@@ -1,15 +1,24 @@
 import SwiftUI
 
-struct MessageThreadView: View {
+struct TripChatView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var draft: String = ""
-    @State private var localThread: MessageThread
-    private let threadID: UUID
+    @State private var localThread: GroupTripThread
 
-    init(thread: MessageThread) {
+    private let threadID: UUID
+    private let tripID: UUID
+    private let currentUser: SnowboardListing.Seller
+
+    init(thread: GroupTripThread, currentUser: SnowboardListing.Seller) {
         _localThread = State(initialValue: thread)
         threadID = thread.id
+        tripID = thread.tripID
+        self.currentUser = currentUser
+    }
+
+    private var tripTitle: String {
+        marketplace.trip(withID: tripID)?.title ?? "Group Chat"
     }
 
     var body: some View {
@@ -17,7 +26,7 @@ struct MessageThreadView: View {
             VStack(spacing: 0) {
                 List {
                     ForEach(localThread.messages) { message in
-                        MessageBubble(message: message)
+                        TripMessageBubble(message: message, isCurrentUser: message.senderID == currentUser.id)
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets())
                     }
@@ -25,9 +34,9 @@ struct MessageThreadView: View {
                 .listStyle(.plain)
 
                 HStack(spacing: 12) {
-                    TextField("Type a message...", text: $draft)
+                    TextField("Share an update...", text: $draft)
                         .textFieldStyle(.roundedBorder)
-                        .disableAutocorrection(true)
+                        .autocorrectionDisabled()
                     Button(action: send) {
                         Image(systemName: "paperplane.fill")
                     }
@@ -36,7 +45,7 @@ struct MessageThreadView: View {
                 .padding()
                 .background(Color(.systemGray6))
             }
-            .navigationTitle(localThread.listing.title)
+            .navigationTitle(tripTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -44,7 +53,7 @@ struct MessageThreadView: View {
                 }
             }
         }
-        .onReceive(marketplace.$threads) { threads in
+        .onReceive(marketplace.$tripThreads) { threads in
             guard let updated = threads.first(where: { $0.id == threadID }) else { return }
             localThread = updated
         }
@@ -53,47 +62,46 @@ struct MessageThreadView: View {
     private func send() {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        if let message = marketplace.sendMessage(trimmed, in: localThread) {
+        if let message = marketplace.sendTripMessage(trimmed, in: localThread, sender: currentUser) {
             localThread.messages.append(message)
         }
         draft = ""
     }
 }
 
-private struct MessageBubble: View {
-    let message: Message
+private struct TripMessageBubble: View {
+    let message: GroupTripMessage
+    let isCurrentUser: Bool
 
     var body: some View {
         HStack {
-            if message.sender == .buyer { Spacer(minLength: 0) }
+            if isCurrentUser { Spacer(minLength: 0) }
 
-            VStack(alignment: message.sender == .buyer ? .trailing : .leading, spacing: 6) {
-                Text(message.sender.displayName)
+            VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 6) {
+                Text(message.senderName)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text(message.text)
                     .padding(12)
-                    .background(message.sender == .buyer ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
+                    .background(isCurrentUser ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
 
-            if message.sender == .seller { Spacer(minLength: 0) }
+            if !isCurrentUser { Spacer(minLength: 0) }
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
     }
 }
 
-struct MessageThreadView_Previews: PreviewProvider {
+struct TripChatView_Previews: PreviewProvider {
     static var previews: some View {
-        if let thread = SampleData.seedThreads(for: SampleData.seedListings, account: SampleData.defaultAccount).first {
-            MessageThreadView(thread: thread)
-                .environmentObject(MarketplaceViewModel())
-        } else if let listing = SampleData.seedListings.first {
-            MessageThreadView(thread: MessageThread(id: UUID(), listing: listing, messages: []))
+        let trips = SampleData.seedTrips(for: SampleData.defaultAccount)
+        if let thread = SampleData.seedTripThreads(for: trips, account: SampleData.defaultAccount).first {
+            return TripChatView(thread: thread, currentUser: SampleData.defaultAccount.seller)
                 .environmentObject(MarketplaceViewModel())
         } else {
-            EmptyView()
+            return EmptyView()
         }
     }
 }
