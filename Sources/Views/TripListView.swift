@@ -2,7 +2,9 @@ import SwiftUI
 
 struct TripListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var showingCreateSheet = false
+    @State private var showingProfile = false
 
     var body: some View {
         NavigationView {
@@ -27,11 +29,27 @@ struct TripListView: View {
                 }
             }
             .navigationTitle("Group Trips")
-            .toolbar { addTripToolbarItem }
+            .toolbar {
+                profileToolbarItem
+                addTripToolbarItem
+            }
             .sheet(isPresented: $showingCreateSheet) {
                 CreateTripView(isPresented: $showingCreateSheet)
                     .environmentObject(marketplace)
                     .preferredColorScheme(.dark)
+            }
+            .sheet(isPresented: $showingProfile) {
+                ProfileView()
+                    .environmentObject(auth)
+            }
+        }
+    }
+
+    private var profileToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button { showingProfile = true } label: {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.title3)
             }
         }
         .preferredColorScheme(.dark)
@@ -145,5 +163,6 @@ struct TripListView_Previews: PreviewProvider {
     static var previews: some View {
         TripListView()
             .environmentObject(MarketplaceViewModel())
+            .environmentObject(AuthViewModel())
     }
 }
