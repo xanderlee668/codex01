@@ -86,14 +86,27 @@ final class MarketplaceViewModel: ObservableObject {
     }
 
     var filteredListings: [SnowboardListing] {
-        listings.filter { listing in
+        let locale = Locale.current
+        let normalizedTokens = filterText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(whereSeparator: { $0.isWhitespace })
+            .map { String($0).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: locale) }
+
+        return listings.filter { listing in
             let matchesKeyword: Bool
-            if filterText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if normalizedTokens.isEmpty {
                 matchesKeyword = true
             } else {
-                matchesKeyword = listing.title.localizedCaseInsensitiveContains(filterText) ||
-                    listing.description.localizedCaseInsensitiveContains(filterText) ||
-                    listing.location.localizedCaseInsensitiveContains(filterText)
+                let searchableFields = [
+                    listing.title,
+                    listing.description,
+                    listing.location,
+                    listing.seller.nickname
+                ].map { $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: locale) }
+
+                matchesKeyword = normalizedTokens.allSatisfy { token in
+                    searchableFields.contains { $0.contains(token) }
+                }
             }
 
             let matchesTrade = selectedTradeOption.map { $0 == listing.tradeOption } ?? true
