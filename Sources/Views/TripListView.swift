@@ -6,18 +6,24 @@ struct TripListView: View {
 
     var body: some View {
         NavigationView {
-            Group {
+            ZStack {
+                NightGradientBackground()
+
                 if marketplace.sortedTrips.isEmpty {
                     emptyState
                 } else {
-                    List {
-                        ForEach(marketplace.sortedTrips) { trip in
-                            NavigationLink(destination: TripDetailView(trip: trip)) {
-                                TripRow(trip: trip, joinState: marketplace.tripJoinState(for: trip))
+                    ScrollView {
+                        LazyVStack(spacing: 22) {
+                            ForEach(marketplace.sortedTrips) { trip in
+                                NavigationLink(destination: TripDetailView(trip: trip)) {
+                                    TripRow(trip: trip, joinState: marketplace.tripJoinState(for: trip))
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
+                        .padding(.vertical, 32)
+                        .padding(.horizontal, 20)
                     }
-                    .listStyle(.insetGrouped)
                 }
             }
             .navigationTitle("Group Trips")
@@ -25,8 +31,10 @@ struct TripListView: View {
             .sheet(isPresented: $showingCreateSheet) {
                 CreateTripView(isPresented: $showingCreateSheet)
                     .environmentObject(marketplace)
+                    .preferredColorScheme(.dark)
             }
         }
+        .preferredColorScheme(.dark)
     }
 
     private var addTripToolbarItem: some ToolbarContent {
@@ -35,24 +43,25 @@ struct TripListView: View {
                 Image(systemName: "plus.circle.fill")
                     .font(.title3)
             }
+            .buttonStyle(IconGlassButtonStyle())
         }
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 18) {
             Image(systemName: "figure.snowboarding")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .font(.system(size: 56))
+                .foregroundColor(.white.opacity(0.75))
             Text("No group trips yet")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.white.opacity(0.85))
             Text("Start a trip to find riding buddies across Europe.")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
+                .foregroundColor(.white.opacity(0.65))
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .nightGlassCard(padding: 28)
+        .padding(.horizontal, 32)
     }
 }
 
@@ -68,41 +77,36 @@ private struct TripRow: View {
     }()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(trip.title)
                     .font(.headline)
+                    .foregroundColor(.white)
                 Spacer()
                 Text(trip.startDate, formatter: Self.dateFormatter)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.7))
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Label(trip.resort, systemImage: "snowflake")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
                 Label("Departs from \(trip.departureLocation)", systemImage: "mappin.and.ellipse")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
                 Label(
                     "Confirmed riders: \(trip.currentParticipantsCount) / \(trip.maximumParticipants)",
                     systemImage: "person.3"
                 )
-                .font(.subheadline)
-                .foregroundColor(.secondary)
                 Label {
                     Text(trip.estimatedCostPerPerson, format: .currency(code: "GBP"))
                 } icon: {
                     Image(systemName: "sterlingsign.circle")
                 }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
             }
+            .font(.subheadline)
+            .foregroundColor(.white.opacity(0.7))
 
             joinBadge
         }
-        .padding(.vertical, 8)
+        .nightGlassCard()
     }
 
     @ViewBuilder
@@ -124,10 +128,16 @@ private struct TripRow: View {
             .font(.caption)
             .fontWeight(.semibold)
             .foregroundColor(color)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(color.opacity(0.12))
-            .clipShape(Capsule())
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(color.opacity(0.18))
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .stroke(color.opacity(0.4), lineWidth: 1)
+                    )
+            )
     }
 }
 
