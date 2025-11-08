@@ -7,12 +7,18 @@ struct AuthView: View {
     @State private var confirmPassword: String = ""
     @State private var displayName: String = ""
     @State private var mode: Mode = .login
+    @State private var selectedTab: Tab = .marketplace
 
     private enum Mode: String, CaseIterable, Identifiable {
         case login = "Log In"
         case register = "Register"
 
         var id: String { rawValue }
+    }
+
+    private enum Tab: Hashable {
+        case marketplace
+        case groupTrips
     }
 
     private var actionButtonTitle: String {
@@ -31,18 +37,21 @@ struct AuthView: View {
     var body: some View {
         Group {
             if auth.isAuthenticated {
-                TabView {
+                TabView(selection: $selectedTab) {
                     ListingListView()
                         .environmentObject(auth.marketplace)
+                        .tag(Tab.marketplace)
                         .tabItem {
                             Label("Marketplace", systemImage: "figure.snowboarding")
                         }
 
                     TripListView()
                         .environmentObject(auth.marketplace)
+                        .tag(Tab.groupTrips)
                         .tabItem {
                             Label("Group Trips", systemImage: "person.3")
                         }
+
                 }
             } else {
                 ScrollView {
