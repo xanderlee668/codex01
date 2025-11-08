@@ -94,10 +94,12 @@ objects = {
 1D3E5C952C02105F004C4C55 /* Preview Assets.xcassets */,
 ); path = "Preview Content"; sourceTree = "<group>"; };
 1D3E5C9B2C02105F004C4C55 /* ViewModels */ = {isa = PBXGroup; children = (
+1DF2E0012C0B568600F4E1D4 /* AuthViewModel.swift */,
 1D3E5C8E2C02105F004C4C55 /* MarketplaceViewModel.swift */,
             AA2AC3AA2D7AF6A4006274B4 /* AuthViewModel.swift */,
         ); path = ViewModels; sourceTree = "<group>"; };
 1D3E5C9D2C02105F004C4C55 /* Views */ = {isa = PBXGroup; children = (
+1DF2E0032C0B568600F4E1D4 /* AuthView.swift */,
 1D3E5C7C2C02105F004C4C55 /* ListingListView.swift */,
 1D3E5C7E2C02105F004C4C55 /* FilterBarView.swift */,
 1D3E5C802C02105F004C4C55 /* ListingRowView.swift */,
