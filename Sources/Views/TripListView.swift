@@ -30,39 +30,21 @@ struct TripListView: View {
             }
             .navigationTitle("Group Trips")
             .toolbar {
-                profileToolbarItem
-                addTripToolbarItem
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { showingCreateSheet = true } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                    }
+                    .buttonStyle(IconGlassButtonStyle())
+                }
             }
             .sheet(isPresented: $showingCreateSheet) {
                 CreateTripView(isPresented: $showingCreateSheet)
                     .environmentObject(marketplace)
-                    .preferredColorScheme(.dark)
-            }
-            .sheet(isPresented: $showingProfile) {
-                ProfileView()
-                    .environmentObject(auth)
+                    .environment(\.colorScheme, .dark)
             }
         }
-    }
-
-    private var profileToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button { showingProfile = true } label: {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.title3)
-            }
-        }
-        .preferredColorScheme(.dark)
-    }
-
-    private var addTripToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarTrailing) {
-            Button { showingCreateSheet = true } label: {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title3)
-            }
-            .buttonStyle(IconGlassButtonStyle())
-        }
+        .environment(\.colorScheme, .dark)
     }
 
     private var emptyState: some View {

@@ -62,10 +62,6 @@ struct ListingListView: View {
                     .environmentObject(auth)
                     .preferredColorScheme(.dark)
             }
-            .sheet(isPresented: $showingProfile) {
-                ProfileView()
-                    .environmentObject(auth)
-            }
         }
         .preferredColorScheme(.dark)
     }
@@ -99,15 +95,6 @@ struct ListingListView: View {
                     .font(.title3)
             }
             .buttonStyle(IconGlassButtonStyle())
-        }
-    }
-
-    private var profileToolbarItem: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button { showingProfile = true } label: {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.title3)
-            }
         }
     }
 
