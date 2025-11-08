@@ -70,6 +70,7 @@ struct ListingRowView: View {
         .nightGlassCard()
     }
 
+    /// 列表左侧的主图优先展示用户上传的首张照片
     @ViewBuilder
     private var heroImage: some View {
 #if canImport(UIKit)
@@ -85,6 +86,7 @@ struct ListingRowView: View {
 #endif
     }
 
+    /// 当没有上传图片时的占位图示
     private var placeholderImage: some View {
         LinearGradient(
             colors: [Color.accentColor.opacity(0.55), Color.blue.opacity(0.35)],

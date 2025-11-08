@@ -37,7 +37,8 @@ struct AuthView: View {
     var body: some View {
         Group {
             if auth.isAuthenticated {
-                TabView(selection: $selectedTab) {
+                // 登录成功后展示主业务 Tab
+                TabView {
                     ListingListView()
                         .environmentObject(auth.marketplace)
                         .tag(Tab.marketplace)
@@ -54,6 +55,7 @@ struct AuthView: View {
 
                 }
             } else {
+                // 登录 / 注册表单
                 ScrollView {
                     VStack(spacing: 28) {
                         VStack(spacing: 12) {
@@ -153,11 +155,13 @@ struct AuthView: View {
             }
         }
         .animation(.easeInOut, value: auth.isAuthenticated)
+        // 切换模式时清理密码并重置错误
         .onChange(of: mode) { _ in
             auth.authError = nil
             password = ""
             confirmPassword = ""
         }
+        // 登录成功后清空输入，避免下次自动填充
         .onChange(of: auth.isAuthenticated) { isAuthed in
             guard isAuthed else { return }
             username = ""

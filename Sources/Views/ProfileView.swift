@@ -34,10 +34,12 @@ struct ProfileView: View {
                 ScrollView {
                     VStack(spacing: 26) {
                         if auth.isAuthenticated {
+                            // 已登录状态：展示资料、密码与会话操作
                             personalInformationCard
                             changePasswordCard
                             sessionActionsCard
                         } else {
+                            // 未登录状态给出提示
                             loggedOutCard
                         }
                     }
@@ -217,6 +219,7 @@ struct ProfileView: View {
         }
     }
 
+    /// 根据当前账号填充输入框，支持实时响应登录状态变化
     private func populateFields() {
         guard let account = auth.currentAccount, auth.isAuthenticated else {
             clearFields()
@@ -228,6 +231,7 @@ struct ProfileView: View {
         bio = account.bio
     }
 
+    /// 尝试保存资料，成功后提示并留在页面
     private func saveProfile() {
         let result = auth.updateProfile(
             displayName: displayName,
@@ -244,6 +248,7 @@ struct ProfileView: View {
         }
     }
 
+    /// 调用 ViewModel 完成密码校验与更新
     private func updatePassword() {
         let result = auth.changePassword(
             currentPassword: currentPassword,
@@ -262,6 +267,7 @@ struct ProfileView: View {
         }
     }
 
+    /// 退出后重置所有本地状态并关闭页面
     private func signOut() {
         auth.signOut()
         clearFields()
@@ -270,6 +276,7 @@ struct ProfileView: View {
         dismiss()
     }
 
+    /// 清理输入框，避免上一个账号的数据残留
     private func clearFields() {
         displayName = ""
         email = ""

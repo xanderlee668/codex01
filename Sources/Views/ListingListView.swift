@@ -6,6 +6,7 @@ struct ListingListView: View {
     @State private var showingAddSheet = false
     @State private var showingProfile = false
 
+    /// 直接复用 ViewModel 的过滤结果，保证筛选逻辑单一来源
     private var listings: [SnowboardListing] { marketplace.filteredListings }
 
     var body: some View {
@@ -51,6 +52,7 @@ struct ListingListView: View {
                 profileToolbarItem
                 addListingToolbarItem
             }
+            // 发布入口支持 iOS 16+ 图片上传，旧系统弹出提示页
             .sheet(isPresented: $showingAddSheet) {
                 if #available(iOS 16.0, *) {
                     AddListingView(isPresented: $showingAddSheet)
@@ -62,6 +64,7 @@ struct ListingListView: View {
                         .preferredColorScheme(.dark)
                 }
             }
+            // 左上角头像入口，打开个人信息页
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
                     .environmentObject(auth)
@@ -71,11 +74,13 @@ struct ListingListView: View {
         .preferredColorScheme(.dark)
     }
 
+    /// 顶部过滤器模块，抽成子视图方便复用
     private var filterSection: some View {
         FilterBarView()
             .nightGlassCard()
     }
 
+    /// 当筛选无结果时的提示卡片
     private var emptyState: some View {
         VStack(spacing: 18) {
             Image(systemName: "snowflake")
@@ -93,6 +98,7 @@ struct ListingListView: View {
         .padding(.horizontal, 32)
     }
 
+    /// 左上角 Profile 入口按钮
     private var profileToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button { showingProfile = true } label: {
@@ -103,6 +109,7 @@ struct ListingListView: View {
         }
     }
 
+    /// 右上角发布入口按钮
     private var addListingToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button { showingAddSheet = true } label: {

@@ -5,6 +5,7 @@ struct FilterBarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
+            // 关键字搜索：同时匹配标题、描述、地点与卖家昵称
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.white.opacity(0.65))
@@ -22,6 +23,7 @@ struct FilterBarView: View {
                     )
             )
 
+            // 交易方式筛选 chips，可重复点击取消
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     PickerChipView(title: "All trade options", isSelected: marketplace.selectedTradeOption == nil) {
@@ -41,6 +43,7 @@ struct FilterBarView: View {
                 .padding(.horizontal, 2)
             }
 
+            // 成色筛选 chips，可重复点击取消
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     PickerChipView(title: "All conditions", isSelected: marketplace.selectedCondition == nil) {

@@ -13,10 +13,13 @@ struct AddListingView: View {
     @State private var location: String = ""
     @State private var tradeOption: SnowboardListing.TradeOption = .faceToFace
     @State private var condition: SnowboardListing.Condition = .likeNew
+    /// PhotosPicker 返回的原始选择项，用于异步加载 Data
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    /// 已转换好的预览草稿，包含压缩后的图片 Data
     @State private var photos: [ListingPhotoDraft] = []
     @Binding var isPresented: Bool
 
+    /// 产品需求：一次最多上传 6 张照片
     private let maxPhotos = 6
 
     var body: some View {
@@ -108,6 +111,7 @@ struct AddListingView: View {
                 }
             }
         }
+        // 监听 PhotosPicker 的选项变化，异步加载真实数据
         .onChange(of: selectedPhotoItems) { newItems in
             guard !newItems.isEmpty else { return }
             Task { await loadPhotos(from: newItems) }
@@ -121,6 +125,7 @@ struct AddListingView: View {
         !location.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
+    /// 将表单内容组装成 SnowboardListing，并回写给列表
     private func createListing() {
         let newListing = SnowboardListing(
             id: UUID(),
@@ -139,6 +144,7 @@ struct AddListingView: View {
         resetForm()
     }
 
+    /// 成功发布后重置表单，便于继续发布下一条
     private func resetForm() {
         title = ""
         description = ""
@@ -150,10 +156,12 @@ struct AddListingView: View {
         selectedPhotoItems.removeAll()
     }
 
+    /// 在预览区域删除某张图片
     private func removePhoto(_ photo: ListingPhotoDraft) {
         photos.removeAll { $0.id == photo.id }
     }
 
+    /// 将 PhotosPicker 返回的 item 转换为压缩后的图片 Data
     private func loadPhotos(from items: [PhotosPickerItem]) async {
         var loaded: [ListingPhotoDraft] = []
 
@@ -179,6 +187,7 @@ struct AddListingView: View {
         }
     }
 
+    /// 使用 UIKit 对图片进行等比缩放与压缩，减小内存占用
     private func sanitize(imageData data: Data) -> Data? {
 #if canImport(UIKit)
         guard let image = UIImage(data: data) else { return nil }
@@ -198,6 +207,7 @@ struct AddListingView: View {
     }
 }
 
+/// 上传过程中暂存的照片，用于预览与删除操作
 private struct ListingPhotoDraft: Identifiable, Equatable {
     let id: UUID
     let data: Data
@@ -208,6 +218,7 @@ private struct ListingPhotoDraft: Identifiable, Equatable {
     }
 }
 
+/// 横向滚动的照片预览缩略图
 private struct ListingPhotoPreview: View {
     let photo: ListingPhotoDraft
     let onRemove: () -> Void

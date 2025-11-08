@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+/// 负责管理登录状态、账号列表与 Marketplace 的联动
 final class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
     @Published var authError: String? = nil
@@ -13,6 +14,7 @@ final class AuthViewModel: ObservableObject {
         currentAccount?.seller
     }
 
+    // MARK: - 初始化
     init(
         accounts: [UserAccount] = SampleData.accounts,
         initialAccount: UserAccount? = nil,
@@ -55,6 +57,7 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    /// 简单的本地登录校验，并将账号信息同步给市场 ViewModel
     func signIn(username: String, password: String) {
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedUsername.isEmpty, !password.isEmpty else {
@@ -79,6 +82,7 @@ final class AuthViewModel: ObservableObject {
         isAuthenticated = true
     }
 
+    /// 注册流程仅在本地追加账号，用于 Demo 体验
     func register(username: String, password: String, displayName: String) {
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDisplayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -160,6 +164,7 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    /// 更新当前账号的昵称、邮箱、所在地和简介
     func updateProfile(
         displayName: String,
         email: String,
@@ -185,6 +190,7 @@ final class AuthViewModel: ObservableObject {
         return .success(())
     }
 
+    /// 校验旧密码与强度后，更新本地存储的密码
     func changePassword(
         currentPassword: String,
         newPassword: String,
@@ -200,12 +206,14 @@ final class AuthViewModel: ObservableObject {
         return .success(())
     }
 
+    /// 退出登录后会清空当前账号信息，返回到登录页
     func signOut() {
         isAuthenticated = false
         currentAccount = nil
         authError = nil
     }
 
+    /// 用于将修改后的账号写回数组，同时刷新 Marketplace 依赖的数据
     private func persist(_ account: UserAccount) {
         guard let index = accounts.firstIndex(where: { $0.id == account.id }) else { return }
         accounts[index] = account

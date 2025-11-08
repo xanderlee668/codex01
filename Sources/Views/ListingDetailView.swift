@@ -29,6 +29,7 @@ struct ListingDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if !localListing.photos.isEmpty {
+                    // 详情页顶部轮播，展示所有上传的照片
                     ListingPhotoCarousel(photos: localListing.photos)
                         .frame(height: 260)
                         .transition(.opacity)
@@ -55,12 +56,12 @@ struct ListingDetailView: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button {
-                            marketplace.toggleFavorite(for: localListing)
-                            localListing.isFavorite.toggle()
-                        } label: {
-                            Label(
-                                localListing.isFavorite ? "Saved" : "Save",
+                    Button {
+                        marketplace.toggleFavorite(for: localListing)
+                        localListing.isFavorite.toggle()
+                    } label: {
+                        Label(
+                            localListing.isFavorite ? "Saved" : "Save",
                                 systemImage: localListing.isFavorite ? "heart.fill" : "heart"
                             )
                             .labelStyle(.iconOnly)
@@ -237,6 +238,7 @@ private struct SellerCardView: View {
     }
 }
 
+/// 顶部轮播组件，支持左右滑动浏览上传的所有照片
 private struct ListingPhotoCarousel: View {
     let photos: [SnowboardListing.Photo]
 
@@ -263,6 +265,7 @@ private struct ListingPhotoCarousel: View {
         .shadow(color: Color.black.opacity(0.3), radius: 16, x: 0, y: 8)
     }
 
+    /// 将 Data 解码为 UIImage，失败时回退到渐变占位
     @ViewBuilder
     private func carouselImage(for photo: SnowboardListing.Photo) -> some View {
 #if canImport(UIKit)

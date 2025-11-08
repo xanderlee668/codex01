@@ -52,20 +52,8 @@ final class MarketplaceViewModel: ObservableObject {
         } else {
             self.threads = SampleData.seedThreads(for: listings, account: account)
         }
-/*
-        if let groupTrips {
-            self.groupTrips = groupTrips
-        } else {
-            self.groupTrips = SampleData.seedTrips(for: account)
-        }
 
-        if let tripThreads {
-            self.tripThreads = tripThreads
-        } else {
-            self.tripThreads = SampleData.seedTripThreads(for: self.groupTrips, account: account)
-        }
-      */
-        // ✅ 改成先用局部变量计算，再给 self 赋值（避免在 init 期间读取 self）
+        // 使用局部变量先计算结果，避免在 init 阶段过早访问 self 属性
         let groupTripsValue: [GroupTrip]
         if let groupTrips {
             groupTripsValue = groupTrips
@@ -81,10 +69,11 @@ final class MarketplaceViewModel: ObservableObject {
             tripThreadsValue = SampleData.seedTripThreads(for: groupTripsValue, account: account)
         }
         self.tripThreads = tripThreadsValue
-        
-        
+
+
     }
 
+    /// 根据关键字、交易方式、成色等条件实时过滤列表数据
     var filteredListings: [SnowboardListing] {
         let locale = Locale.current
         let normalizedTokens = filterText
@@ -119,10 +108,12 @@ final class MarketplaceViewModel: ObservableObject {
         groupTrips.sorted(by: { $0.startDate < $1.startDate })
     }
 
+    /// 发布新的 listing 后将其插入到数组顶部，方便立即看到结果
     func addListing(_ listing: SnowboardListing) {
         listings.insert(listing, at: 0)
     }
 
+    /// 收藏状态在列表、详情间共享，这里直接修改源数组并触发刷新
     func toggleFavorite(for listing: SnowboardListing) {
         guard let index = listings.firstIndex(where: { $0.id == listing.id }) else { return }
         listings[index].isFavorite.toggle()
