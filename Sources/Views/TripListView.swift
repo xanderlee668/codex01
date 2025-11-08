@@ -141,6 +141,7 @@ private struct TripRow: View {
     }
 }
 
+#if DEBUG
 struct TripListView_Previews: PreviewProvider {
     static var previews: some View {
         TripListView()
@@ -148,3 +149,4 @@ struct TripListView_Previews: PreviewProvider {
             .environmentObject(AuthViewModel.previewAuthenticated())
     }
 }
+#endif
