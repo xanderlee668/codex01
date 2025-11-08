@@ -2,7 +2,9 @@ import SwiftUI
 
 struct TripListView: View {
     @EnvironmentObject private var marketplace: MarketplaceViewModel
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var showingCreateSheet = false
+    @State private var showingProfile = false
 
     var body: some View {
         NavigationView {
@@ -143,5 +145,6 @@ struct TripListView_Previews: PreviewProvider {
     static var previews: some View {
         TripListView()
             .environmentObject(MarketplaceViewModel())
+            .environmentObject(AuthViewModel())
     }
 }
