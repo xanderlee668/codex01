@@ -45,93 +45,102 @@ struct AuthView: View {
                         }
                 }
             } else {
-                VStack(spacing: 24) {
-                    VStack(spacing: 12) {
-                        Text("Snowboard Swap")
-                            .font(.largeTitle)
-                            .bold()
-                        Text("Sign in to chat with riders across Europe or create a new account to start listing your gear.")
-                            .font(.subheadline)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Picker("Auth Mode", selection: $mode) {
-                        ForEach(Mode.allCases) { mode in
-                            Text(mode.rawValue).tag(mode)
+                ScrollView {
+                    VStack(spacing: 28) {
+                        VStack(spacing: 12) {
+                            Text("Snowboard Swap")
+                                .font(.largeTitle)
+                                .bold()
+                                .foregroundColor(.white)
+                            Text("Sign in to chat with riders across Europe or create a new account to start listing your gear.")
+                                .font(.subheadline)
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.white.opacity(0.75))
                         }
-                    }
-                    .pickerStyle(.segmented)
+                        .nightGlassCard()
 
-                    VStack(alignment: .leading, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Username")
-                                .font(.headline)
-                            TextField("Enter username", text: $username)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .padding(12)
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(10)
-                        }
-
-                        if mode == .register {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Display name")
-                                    .font(.headline)
-                                TextField("Shown to other riders", text: $displayName)
-                                    .textInputAutocapitalization(.words)
-                                    .autocorrectionDisabled()
-                                    .padding(12)
-                                    .background(Color(.secondarySystemBackground))
-                                    .cornerRadius(10)
+                        VStack(alignment: .leading, spacing: 20) {
+                            Picker("Auth Mode", selection: $mode) {
+                                ForEach(Mode.allCases) { mode in
+                                    Text(mode.rawValue).tag(mode)
+                                }
                             }
-                        }
+                            .pickerStyle(.segmented)
+                            .colorScheme(.dark)
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Password")
-                                .font(.headline)
-                            SecureField("Enter password", text: $password)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .padding(12)
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(10)
-                        }
+                            VStack(alignment: .leading, spacing: 18) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Username")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                    TextField("Enter username", text: $username)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
+                                        .padding(12)
+                                        .background(Color.white.opacity(0.08))
+                                        .cornerRadius(12)
+                                }
 
-                        if mode == .register {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Confirm password")
-                                    .font(.headline)
-                                SecureField("Re-enter password", text: $confirmPassword)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-                                    .padding(12)
-                                    .background(Color(.secondarySystemBackground))
-                                    .cornerRadius(10)
+                                if mode == .register {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Display name")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                        TextField("Shown to other riders", text: $displayName)
+                                            .textInputAutocapitalization(.words)
+                                            .autocorrectionDisabled()
+                                            .padding(12)
+                                            .background(Color.white.opacity(0.08))
+                                            .cornerRadius(12)
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Password")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                    SecureField("Enter password", text: $password)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
+                                        .padding(12)
+                                        .background(Color.white.opacity(0.08))
+                                        .cornerRadius(12)
+                                }
+
+                                if mode == .register {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Confirm password")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                        SecureField("Re-enter password", text: $confirmPassword)
+                                            .textInputAutocapitalization(.never)
+                                            .autocorrectionDisabled()
+                                            .padding(12)
+                                            .background(Color.white.opacity(0.08))
+                                            .cornerRadius(12)
+                                    }
+                                }
                             }
+
+                            if let error = auth.authError {
+                                Text(error)
+                                    .font(.subheadline)
+                                    .foregroundColor(.red.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                            }
+
+                            Button(action: authenticate) {
+                                Text(actionButtonTitle)
+                            }
+                            .buttonStyle(PrimaryGlassButtonStyle())
+                            .opacity(isActionDisabled ? 0.6 : 1)
+                            .disabled(isActionDisabled)
                         }
+                        .nightGlassCard()
                     }
-
-                    if let error = auth.authError {
-                        Text(error)
-                            .font(.subheadline)
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Button(action: authenticate) {
-                        Text(actionButtonTitle)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(isActionDisabled ? Color.gray : Color.blue)
-                            .cornerRadius(12)
-                    }
-                    .disabled(isActionDisabled)
+                    .padding(.vertical, 48)
+                    .padding(.horizontal, 28)
                 }
-                .padding(32)
             }
         }
         .animation(.easeInOut, value: auth.isAuthenticated)
@@ -147,6 +156,8 @@ struct AuthView: View {
             confirmPassword = ""
             displayName = ""
         }
+        .background(NightGradientBackground())
+        .preferredColorScheme(.dark)
     }
 
     private func authenticate() {
