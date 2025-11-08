@@ -282,4 +282,10 @@ final class MarketplaceViewModel: ObservableObject {
         groupTrips = SampleData.seedTrips(for: account)
         tripThreads = SampleData.seedTripThreads(for: groupTrips, account: account)
     }
+
+    func updateCurrentAccount(_ account: UserAccount) {
+        currentUser = account.seller
+        followingSellerIDs = account.followingSellerIDs
+        followersOfCurrentUser = account.followersOfCurrentUser
+    }
 }
