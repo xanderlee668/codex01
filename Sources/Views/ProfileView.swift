@@ -138,7 +138,7 @@ struct ProfileView: View {
             TextField(title, text: text)
                 .keyboardType(keyboard)
                 .textInputAutocapitalization(autocapitalization)
-                .autocorrectionDisabled(autocapitalization == .never)
+                .autocorrectionDisabled(true)
                 .foregroundColor(.white)
                 .padding(12)
                 .background(
