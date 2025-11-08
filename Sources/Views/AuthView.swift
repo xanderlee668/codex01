@@ -52,10 +52,6 @@ struct AuthView: View {
                             Label("Group Trips", systemImage: "person.3")
                         }
 
-                    ProfileView()
-                        .tabItem {
-                            Label("Profile", systemImage: "person.circle")
-                        }
                 }
             } else {
                 VStack(spacing: 24) {
