@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject private var auth: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var displayName: String = ""
     @State private var email: String = ""
     @State private var location: String = ""
@@ -32,8 +33,13 @@ struct ProfileView: View {
 
                 ScrollView {
                     VStack(spacing: 26) {
-                        personalInformationCard
-                        changePasswordCard
+                        if auth.isAuthenticated {
+                            personalInformationCard
+                            changePasswordCard
+                            sessionActionsCard
+                        } else {
+                            loggedOutCard
+                        }
                     }
                     .padding(.vertical, 40)
                     .padding(.horizontal, 24)
@@ -42,6 +48,9 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .onAppear(perform: populateFields)
             .onChange(of: auth.currentAccount?.id) { _ in
+                populateFields()
+            }
+            .onChange(of: auth.isAuthenticated) { _ in
                 populateFields()
             }
         }
@@ -124,6 +133,40 @@ struct ProfileView: View {
         .nightGlassCard()
     }
 
+    private var sessionActionsCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Session")
+                .font(.title3.weight(.semibold))
+                .foregroundColor(.white)
+
+            Text("Signed in as \(displayName.isEmpty ? (auth.currentAccount?.username ?? "") : displayName)")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+
+            Button("Sign Out", role: .destructive, action: signOut)
+                .buttonStyle(DestructiveGlassButtonStyle())
+        }
+        .nightGlassCard()
+    }
+
+    private var loggedOutCard: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "lock.slash")
+                .font(.system(size: 52))
+                .foregroundColor(.white.opacity(0.8))
+
+            Text("You're not signed in")
+                .font(.title3.weight(.semibold))
+                .foregroundColor(.white)
+
+            Text("Close this screen and return to the log in view to access your account settings.")
+                .font(.subheadline)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.white.opacity(0.7))
+        }
+        .nightGlassCard()
+    }
+
     private func glassField(
         title: String,
         text: Binding<String>,
@@ -138,7 +181,7 @@ struct ProfileView: View {
             TextField(title, text: text)
                 .keyboardType(keyboard)
                 .textInputAutocapitalization(autocapitalization)
-                .autocorrectionDisabled(true)
+                .autocorrectionDisabled(autocapitalization == .never)
                 .foregroundColor(.white)
                 .padding(12)
                 .background(
@@ -175,7 +218,10 @@ struct ProfileView: View {
     }
 
     private func populateFields() {
-        guard let account = auth.currentAccount else { return }
+        guard let account = auth.currentAccount, auth.isAuthenticated else {
+            clearFields()
+            return
+        }
         displayName = account.seller.nickname
         email = account.email
         location = account.location
@@ -214,6 +260,24 @@ struct ProfileView: View {
         case .failure(let error):
             passwordMessage = Feedback(message: error.localizedDescription, kind: .error)
         }
+    }
+
+    private func signOut() {
+        auth.signOut()
+        clearFields()
+        infoMessage = nil
+        passwordMessage = nil
+        dismiss()
+    }
+
+    private func clearFields() {
+        displayName = ""
+        email = ""
+        location = ""
+        bio = ""
+        currentPassword = ""
+        newPassword = ""
+        confirmPassword = ""
     }
 }
 

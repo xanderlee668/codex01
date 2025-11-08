@@ -76,6 +76,32 @@ struct PrimaryGlassButtonStyle: ButtonStyle {
     }
 }
 
+struct DestructiveGlassButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.red.opacity(configuration.isPressed ? 0.55 : 0.7))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color.white.opacity(configuration.isPressed ? 0.45 : 0.25), lineWidth: 1)
+                    )
+            )
+            .foregroundColor(.white)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .shadow(
+                color: Color.red.opacity(configuration.isPressed ? 0.25 : 0.4),
+                radius: configuration.isPressed ? 6 : 14,
+                x: 0,
+                y: configuration.isPressed ? 4 : 10
+            )
+            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
+
 struct IconGlassButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
