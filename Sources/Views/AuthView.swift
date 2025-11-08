@@ -31,8 +31,19 @@ struct AuthView: View {
     var body: some View {
         Group {
             if auth.isAuthenticated {
-                ListingListView()
-                    .environmentObject(auth.marketplace)
+                TabView {
+                    ListingListView()
+                        .environmentObject(auth.marketplace)
+                        .tabItem {
+                            Label("Marketplace", systemImage: "figure.snowboarding")
+                        }
+
+                    TripListView()
+                        .environmentObject(auth.marketplace)
+                        .tabItem {
+                            Label("Group Trips", systemImage: "person.3")
+                        }
+                }
             } else {
                 VStack(spacing: 24) {
                     VStack(spacing: 12) {

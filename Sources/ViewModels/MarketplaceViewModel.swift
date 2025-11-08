@@ -17,6 +17,13 @@ final class MarketplaceViewModel: ObservableObject {
         }
     }
 
+    enum TripJoinState: Equatable {
+        case organizer
+        case approved
+        case pending
+        case notRequested
+    }
+
     @Published var listings: [SnowboardListing]
     @Published var filterText: String = ""
     @Published var selectedTradeOption: SnowboardListing.TradeOption? = nil
@@ -25,20 +32,37 @@ final class MarketplaceViewModel: ObservableObject {
     @Published private(set) var followingSellerIDs: Set<UUID>
     @Published private(set) var followersOfCurrentUser: Set<UUID>
     @Published var threads: [MessageThread]
+    @Published var groupTrips: [GroupTrip]
+    @Published var tripThreads: [GroupTripThread]
 
     init(
         listings: [SnowboardListing] = SampleData.seedListings,
         account: UserAccount = SampleData.defaultAccount,
-        threads: [MessageThread]? = nil
+        threads: [MessageThread]? = nil,
+        groupTrips: [GroupTrip]? = nil,
+        tripThreads: [GroupTripThread]? = nil
     ) {
         self.listings = listings
         self.currentUser = account.seller
         self.followingSellerIDs = account.followingSellerIDs
         self.followersOfCurrentUser = account.followersOfCurrentUser
+
         if let threads {
             self.threads = threads
         } else {
             self.threads = SampleData.seedThreads(for: listings, account: account)
+        }
+
+        if let groupTrips {
+            self.groupTrips = groupTrips
+        } else {
+            self.groupTrips = SampleData.seedTrips(for: account)
+        }
+
+        if let tripThreads {
+            self.tripThreads = tripThreads
+        } else {
+            self.tripThreads = SampleData.seedTripThreads(for: self.groupTrips, account: account)
         }
     }
 
@@ -57,6 +81,10 @@ final class MarketplaceViewModel: ObservableObject {
             let matchesCondition = selectedCondition.map { $0 == listing.condition } ?? true
             return matchesKeyword && matchesTrade && matchesCondition
         }
+    }
+
+    var sortedTrips: [GroupTrip] {
+        groupTrips.sorted(by: { $0.startDate < $1.startDate })
     }
 
     func addListing(_ listing: SnowboardListing) {
@@ -123,10 +151,116 @@ final class MarketplaceViewModel: ObservableObject {
         return message
     }
 
+    func tripJoinState(for trip: GroupTrip) -> TripJoinState {
+        if trip.organizer.id == currentUser.id {
+            return .organizer
+        }
+        if trip.approvedParticipantIDs.contains(currentUser.id) {
+            return .approved
+        }
+        if trip.hasPendingRequest(from: currentUser) {
+            return .pending
+        }
+        return .notRequested
+    }
+
+    @discardableResult
+    func requestToJoin(trip: GroupTrip) -> GroupTrip.JoinRequest? {
+        guard tripJoinState(for: trip) == .notRequested else { return nil }
+        guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return nil }
+        let request = GroupTrip.JoinRequest(id: UUID(), applicant: currentUser, requestedAt: Date())
+        groupTrips[index].pendingRequests.append(request)
+        return request
+    }
+
+    func approve(_ request: GroupTrip.JoinRequest, in trip: GroupTrip) {
+        guard trip.organizer.id == currentUser.id else { return }
+        guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return }
+        groupTrips[index].pendingRequests.removeAll(where: { $0.id == request.id })
+        groupTrips[index].approvedParticipantIDs.insert(request.applicant.id)
+    }
+
+    func revoke(_ request: GroupTrip.JoinRequest, in trip: GroupTrip) {
+        guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return }
+        groupTrips[index].pendingRequests.removeAll(where: { $0.id == request.id })
+    }
+
+    func canAccessTripChat(for trip: GroupTrip) -> Bool {
+        trip.includesParticipant(currentUser)
+    }
+
+    func tripThread(for trip: GroupTrip) -> GroupTripThread? {
+        guard canAccessTripChat(for: trip) else { return nil }
+
+        if let index = tripThreads.firstIndex(where: { $0.tripID == trip.id }) {
+            return tripThreads[index]
+        }
+
+        let messages = SampleData.tripMessages(for: trip.id)
+        let threadID = SampleData.tripThreadIdentifier(for: trip.id) ?? UUID()
+        let thread = GroupTripThread(id: threadID, tripID: trip.id, messages: messages)
+        tripThreads.append(thread)
+        return thread
+    }
+
+    @discardableResult
+    func sendTripMessage(_ text: String, in thread: GroupTripThread, sender: SnowboardListing.Seller? = nil) -> GroupTripMessage? {
+        guard let index = tripThreads.firstIndex(where: { $0.id == thread.id }) else { return nil }
+        let author = sender ?? currentUser
+        let role: GroupTripMessage.Role
+        if let trip = groupTrips.first(where: { $0.id == thread.tripID }), trip.organizer.id == author.id {
+            role = .organizer
+        } else {
+            role = .participant
+        }
+        let message = GroupTripMessage(
+            id: UUID(),
+            senderID: author.id,
+            senderName: author.nickname,
+            role: role,
+            text: text,
+            timestamp: Date()
+        )
+        tripThreads[index].messages.append(message)
+        return message
+    }
+
+    func createTrip(
+        title: String,
+        resort: String,
+        startDate: Date,
+        departureLocation: String,
+        participantRange: ClosedRange<Int>,
+        estimatedCostPerPerson: Double,
+        description: String
+    ) -> GroupTrip {
+        let trip = GroupTrip(
+            id: UUID(),
+            title: title,
+            resort: resort,
+            departureLocation: departureLocation,
+            startDate: startDate,
+            participantRange: participantRange,
+            estimatedCostPerPerson: estimatedCostPerPerson,
+            description: description,
+            organizer: currentUser,
+            approvedParticipantIDs: [] as Set<UUID>,
+            pendingRequests: []
+        )
+        groupTrips.insert(trip, at: 0)
+        return trip
+    }
+
+    func trip(withID id: UUID) -> GroupTrip? {
+        groupTrips.first(where: { $0.id == id })
+    }
+
     func configure(with account: UserAccount) {
         currentUser = account.seller
         followingSellerIDs = account.followingSellerIDs
         followersOfCurrentUser = account.followersOfCurrentUser
         threads = SampleData.seedThreads(for: listings, account: account)
+        groupTrips = SampleData.seedTrips(for: account)
+        tripThreads = SampleData.seedTripThreads(for: groupTrips, account: account)
     }
 }

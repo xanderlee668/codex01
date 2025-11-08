@@ -135,6 +135,102 @@ enum SampleData {
         ]
     ]
 
+    private static let arlbergTripID = UUID(uuidString: "D813F1B0-36C5-4E3C-A91C-1B9DF37F7E04")!
+    private static let laaxTripID = UUID(uuidString: "3AD2C8D0-1B1C-4E8F-A7F3-3322466DB05D")!
+    private static let lofotenTripID = UUID(uuidString: "A71988C8-E60C-45EA-8C2F-6A59F0AC0133")!
+
+    private static let baseTripSeeds: [GroupTrip] = [
+        GroupTrip(
+            id: arlbergTripID,
+            title: "Arlberg Powder Weekend",
+            resort: "St. Anton am Arlberg, Austria",
+            departureLocation: "Innsbruck, Austria",
+            startDate: referenceDate.addingTimeInterval(86_400 * 10),
+            participantRange: 4...8,
+            estimatedCostPerPerson: 320,
+            description: "Chasing fresh snow around the Arlberg region with avalanche gear checks and shared ride from Innsbruck.",
+            organizer: accounts[0].seller,
+            approvedParticipantIDs: Set([marketplaceSellers[2].id]),
+            pendingRequests: [
+                GroupTrip.JoinRequest(
+                    id: UUID(uuidString: "D873B021-E612-4F98-A1F7-39AA02AC47B1")!,
+                    applicant: marketplaceSellers[1],
+                    requestedAt: referenceDate.addingTimeInterval(7_200)
+                )
+            ]
+        ),
+        GroupTrip(
+            id: laaxTripID,
+            title: "Freestyle Progression in Laax",
+            resort: "Laax, Switzerland",
+            departureLocation: "Zurich, Switzerland",
+            startDate: referenceDate.addingTimeInterval(86_400 * 21),
+            participantRange: 3...6,
+            estimatedCostPerPerson: 450,
+            description: "Park laps with a local coach, shared accommodation in Flims, and optional avalanche awareness refresher.",
+            organizer: marketplaceSellers[0],
+            approvedParticipantIDs: Set([accounts[0].seller.id]),
+            pendingRequests: []
+        ),
+        GroupTrip(
+            id: lofotenTripID,
+            title: "Lofoten Splitboard Adventure",
+            resort: "Lofoten Islands, Norway",
+            departureLocation: "Tromsø, Norway",
+            startDate: referenceDate.addingTimeInterval(86_400 * 35),
+            participantRange: 5...7,
+            estimatedCostPerPerson: 780,
+            description: "Week-long splitboard touring with boat transfers, guiding, and shared cabin lodging on the fjords.",
+            organizer: accounts[1].seller,
+            approvedParticipantIDs: [] as Set<UUID>,
+            pendingRequests: []
+        )
+    ]
+
+    private static let tripThreadIDs: [UUID: UUID] = [
+        arlbergTripID: UUID(uuidString: "2F854BD6-5E61-4469-A340-612EE52E7B42")!,
+        laaxTripID: UUID(uuidString: "6A0B103C-8B6A-4F54-8E74-5B15B6CB7111")!
+    ]
+
+    private static let groupTripMessageSeeds: [UUID: [GroupTripMessage]] = [
+        arlbergTripID: [
+            GroupTripMessage(
+                id: UUID(uuidString: "F65E6C83-5D33-4AA5-9341-1DB1CF629717")!,
+                senderID: accounts[0].seller.id,
+                senderName: accounts[0].seller.nickname,
+                role: .organizer,
+                text: "Welcome aboard! We'll meet at Innsbruck Hauptbahnhof at 06:30 on Saturday to load the van.",
+                timestamp: referenceDate.addingTimeInterval(9_000)
+            ),
+            GroupTripMessage(
+                id: UUID(uuidString: "7E48D32C-2D26-4C86-9281-E4DE1F24C55F")!,
+                senderID: marketplaceSellers[2].id,
+                senderName: marketplaceSellers[2].nickname,
+                role: .participant,
+                text: "I'll bring the spare avalanche kit and radio set just in case anyone needs it.",
+                timestamp: referenceDate.addingTimeInterval(9_600)
+            )
+        ],
+        laaxTripID: [
+            GroupTripMessage(
+                id: UUID(uuidString: "8B32EE38-43F5-4E04-BEB0-5C0C5FB4A95E")!,
+                senderID: marketplaceSellers[0].id,
+                senderName: marketplaceSellers[0].nickname,
+                role: .organizer,
+                text: "Stoked to have you join! We'll warm up on P60 before hitting the pro line. Helmets mandatory.",
+                timestamp: referenceDate.addingTimeInterval(42_000)
+            ),
+            GroupTripMessage(
+                id: UUID(uuidString: "5334B4B2-CC5E-48FB-B994-7C0DA7B43C50")!,
+                senderID: accounts[0].seller.id,
+                senderName: accounts[0].seller.nickname,
+                role: .participant,
+                text: "Perfect. I'll book the train from Zurich to Chur and meet you all Friday evening.",
+                timestamp: referenceDate.addingTimeInterval(43_200)
+            )
+        ]
+    ]
+
     static func messageHistory(for sellerID: UUID) -> [Message] {
         messageSeedsBySeller[sellerID] ?? []
     }
@@ -155,6 +251,38 @@ enum SampleData {
                 listing: listing,
                 messages: messages
             )
+        }
+    }
+
+    static func seedTrips(for account: UserAccount) -> [GroupTrip] {
+        baseTripSeeds.map { trip in
+            var trip = trip
+            if trip.organizer.id == account.seller.id {
+                return trip
+            }
+            if trip.approvedParticipantIDs.contains(account.seller.id) {
+                return trip
+            }
+            // Keep pending requests from other riders but ensure duplicates aren't introduced
+            trip.pendingRequests.removeAll(where: { $0.applicant.id == account.seller.id })
+            return trip
+        }
+    }
+
+    static func tripThreadIdentifier(for tripID: UUID) -> UUID? {
+        tripThreadIDs[tripID]
+    }
+
+    static func tripMessages(for tripID: UUID) -> [GroupTripMessage] {
+        groupTripMessageSeeds[tripID] ?? []
+    }
+
+    static func seedTripThreads(for trips: [GroupTrip], account: UserAccount) -> [GroupTripThread] {
+        trips.compactMap { trip in
+            guard trip.includesParticipant(account.seller) else { return nil }
+            let threadID = tripThreadIdentifier(for: trip.id) ?? UUID()
+            let messages = tripMessages(for: trip.id)
+            return GroupTripThread(id: threadID, tripID: trip.id, messages: messages)
         }
     }
 }
