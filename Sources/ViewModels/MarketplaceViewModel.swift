@@ -301,14 +301,36 @@ final class MarketplaceViewModel: ObservableObject {
     }
 }
 
-#if DEBUG
+
 extension MarketplaceViewModel {
-    static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
-        let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
-        model.listings = SampleData.seedListings
-        model.groupTrips = SampleData.seedTrips(for: account)
-        model.tripThreads = SampleData.seedTripThreads(for: model.groupTrips, account: account)
+    static func preview() -> MarketplaceViewModel {
+        let fakeSeller = SnowboardListing.Seller(
+            id: UUID(),
+            nickname: "Preview Seller",
+            rating: 4.8,
+            dealsCount: 12
+        )
+
+        let fakeAccount = UserAccount(
+            id: UUID(),
+            username: "preview@example.com",
+            password: "password",
+            seller: fakeSeller,
+            followingSellerIDs: [],
+            followersOfCurrentUser: [],
+            email: "preview@example.com",
+            location: "Laax",
+            bio: "Shreds all season long!"
+        )
+
+        let apiClient = APIClient()
+        let model = MarketplaceViewModel(account: fakeAccount, apiClient: apiClient, autoRefresh: false)
+
+        model.listings = []
+        model.groupTrips = []
+        model.tripThreads = []
         return model
     }
 }
-#endif
+
+

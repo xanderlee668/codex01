@@ -88,12 +88,17 @@ struct MessageThreadView_Previews: PreviewProvider {
     static var previews: some View {
         if let thread = SampleData.seedThreads(for: SampleData.seedListings, account: SampleData.defaultAccount).first {
             MessageThreadView(thread: thread)
-                .environmentObject(MarketplaceViewModel())
+                .environmentObject(
+                    MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+                )
         } else if let listing = SampleData.seedListings.first {
             MessageThreadView(thread: MessageThread(id: UUID(), listing: listing, messages: []))
-                .environmentObject(MarketplaceViewModel())
+                .environmentObject(
+                    MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+                )
         } else {
             EmptyView()
         }
     }
 }
+
