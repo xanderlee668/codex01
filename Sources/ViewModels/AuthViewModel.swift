@@ -74,13 +74,14 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    func signOut() {
-        apiClient.logout()
+    func signOut() async {
+        await apiClient.logout() // ✅ 必须 await 调用 actor 方法
         currentAccount = nil
         marketplace = nil
         isAuthenticated = false
         authError = nil
     }
+
 
     func updateProfile(
         displayName: String,
@@ -190,6 +191,30 @@ final class AuthViewModel: ObservableObject {
             }
         }
     }
+
+    private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
+        // 后端需要在 AuthResponse.user 中返回 display_name、rating 等字段，
+        // 对应 UserAccount/Seller 的属性才能正确显示。
+        let seller = SnowboardListing.Seller(
+            id: user.userID,
+            nickname: user.displayName,
+            rating: user.rating,
+            dealsCount: user.dealsCount
+        )
+
+        return UserAccount(
+            id: user.userID,
+            username: user.email,
+            password: "",
+            seller: seller,
+            followingSellerIDs: [],
+            followersOfCurrentUser: [],
+            email: user.email,
+            location: user.location,
+            bio: user.bio
+        )
+    }
+}
 
     private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
         // 复制示例账号作为本地会话模板，保证关注关系、私信和群聊示例数据齐备。

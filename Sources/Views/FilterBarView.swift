@@ -84,8 +84,11 @@ private struct PickerChipView: View {
 struct FilterBarView_Previews: PreviewProvider {
     static var previews: some View {
         FilterBarView()
-            .environmentObject(MarketplaceViewModel())
+            .environmentObject(
+                MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+            )
             .padding()
             .background(Color(.systemGroupedBackground))
     }
 }
+
