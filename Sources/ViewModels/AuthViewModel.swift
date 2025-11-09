@@ -71,12 +71,17 @@ final class AuthViewModel: ObservableObject {
     }
 
     func signOut() {
-        apiClient.logout()
-        currentAccount = nil
-        marketplace = nil
-        isAuthenticated = false
-        authError = nil
+        Task {
+            await apiClient.logout()
+            await MainActor.run {
+                currentAccount = nil
+                marketplace = nil
+                isAuthenticated = false
+                authError = nil
+            }
+        }
     }
+
 
     func updateProfile(
         displayName: String,
@@ -205,19 +210,14 @@ final class AuthViewModel: ObservableObject {
     }
 }
 
-#if DEBUG
 extension AuthViewModel {
     static func previewAuthenticated() -> AuthViewModel {
         let apiClient = APIClient()
         let model = AuthViewModel(apiClient: apiClient, restoreSessionOnLaunch: false)
-        let account = SampleData.accounts.first ?? SampleData.defaultAccount
+        let account = SampleData.defaultAccount
         model.currentAccount = account
         model.isAuthenticated = true
-        let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
-        marketplace.listings = SampleData.seedListings
-        marketplace.groupTrips = SampleData.seedTrips(for: account)
-        marketplace.tripThreads = SampleData.seedTripThreads(for: marketplace.groupTrips, account: account)
-        model.marketplace = marketplace
+        model.marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
         return model
     }
 
@@ -225,4 +225,4 @@ extension AuthViewModel {
         AuthViewModel(restoreSessionOnLaunch: false)
     }
 }
-#endif
+

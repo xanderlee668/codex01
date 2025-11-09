@@ -183,7 +183,8 @@ struct ProfileView: View {
             TextField(title, text: text)
                 .keyboardType(keyboard)
                 .textInputAutocapitalization(autocapitalization)
-                .autocorrectionDisabled(autocapitalization == .never)
+                .autocorrectionDisabled(true)
+
                 .foregroundColor(.white)
                 .padding(12)
                 .background(
@@ -196,6 +197,7 @@ struct ProfileView: View {
                 )
         }
     }
+
 
     private func glassSecureField(title: String, text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 8) {

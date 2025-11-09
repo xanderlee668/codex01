@@ -298,14 +298,49 @@ final class MarketplaceViewModel: ObservableObject {
     }
 }
 
-#if DEBUG
 extension MarketplaceViewModel {
-    static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
-        let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
-        model.listings = SampleData.seedListings
-        model.groupTrips = SampleData.seedTrips(for: account)
-        model.tripThreads = SampleData.seedTripThreads(for: model.groupTrips, account: account)
+    static func preview() -> MarketplaceViewModel {
+        // 创建一个假的卖家
+        let fakeSeller = SnowboardListing.Seller(
+            id: UUID(),
+            nickname: "Preview Rider",
+            rating: 4.8,
+            dealsCount: 23
+        )
+
+        // 创建一个假的用户账户
+        let fakeAccount = UserAccount(
+            id: UUID(),
+            username: "previewUser",
+            password: "password123",
+            seller: fakeSeller,
+            followingSellerIDs: [],
+            followersOfCurrentUser: [],
+            email: "preview@example.com",
+            location: "Zermatt",
+            bio: "Snowboarder for life!"
+        )
+
+        // 假 API 客户端
+        let apiClient = APIClient()
+
+        // 初始化 ViewModel
+        let model = MarketplaceViewModel(
+            account: fakeAccount,
+            apiClient: apiClient,
+            autoRefresh: false
+        )
+
+        // 添加一些假数据（可选）
+        model.listings = []
+        model.groupTrips = []
+        model.tripThreads = []
+
         return model
     }
 }
-#endif
+
+
+
+
+

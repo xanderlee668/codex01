@@ -99,9 +99,12 @@ struct TripChatView_Previews: PreviewProvider {
         let trips = SampleData.seedTrips(for: SampleData.defaultAccount)
         if let thread = SampleData.seedTripThreads(for: trips, account: SampleData.defaultAccount).first {
             return TripChatView(thread: thread, currentUser: SampleData.defaultAccount.seller)
-                .environmentObject(MarketplaceViewModel())
+                .environmentObject(
+                    MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+                )
         } else {
             return EmptyView()
         }
     }
 }
+

@@ -159,7 +159,12 @@ private struct LegacyAddListingPlaceholder: View {
 struct ListingListView_Previews: PreviewProvider {
     static var previews: some View {
         ListingListView()
-            .environmentObject(MarketplaceViewModel.preview())
-            .environmentObject(AuthViewModel.previewAuthenticated())
+            .environmentObject(
+                MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+            )
+            .environmentObject(
+                AuthViewModel(apiClient: APIClient(), restoreSessionOnLaunch: false)
+            )
     }
 }
+

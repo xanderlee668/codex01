@@ -150,7 +150,7 @@ actor APIClient {
             method: .get,
             requiresAuth: true
         )
-        return response.toDomain()
+        return try response.toDomain()
     }
 
     func fetchListings() async throws -> [SnowboardListing] {
