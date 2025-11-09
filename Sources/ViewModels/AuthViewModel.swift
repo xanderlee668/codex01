@@ -74,8 +74,8 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    func signOut() async {
-        await apiClient.logout() // ✅ 必须 await 调用 actor 方法
+    func signOut() {
+        apiClient.logout()
         currentAccount = nil
         marketplace = nil
         isAuthenticated = false
@@ -185,6 +185,15 @@ final class AuthViewModel: ObservableObject {
                 isAuthenticated = true
             }
         } catch {
+            if case APIClient.APIError.missingToken = error {
+                return
+            }
+
+            if case APIClient.APIError.httpStatus(let code, _) = error, code == 401 {
+                apiClient.logout()
+                return
+            }
+
             await MainActor.run {
                 authError = error.localizedDescription
             }

@@ -138,6 +138,7 @@ final class MarketplaceViewModel: ObservableObject {
             )
             let created = try await apiClient.createListing(draft: draft)
             listings.insert(created, at: 0)
+            synchronizeThreadsWithListings()
             lastError = nil
             return true
         } catch {
@@ -149,6 +150,7 @@ final class MarketplaceViewModel: ObservableObject {
     func toggleFavorite(for listing: SnowboardListing) {
         guard let index = listings.firstIndex(where: { $0.id == listing.id }) else { return }
         listings[index].isFavorite.toggle()
+        synchronizeThreadsWithListings()
     }
 
     func isFollowing(_ seller: SnowboardListing.Seller) -> Bool {

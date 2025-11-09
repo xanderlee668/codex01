@@ -162,9 +162,8 @@ actor APIClient {
             method: .get,
             requiresAuth: true
         )
-        return try response.toDomain() // ✅ 只需直接调用 toDomain()
+        return response.toDomain()
     }
-
 
     func fetchListings() async throws -> [SnowboardListing] {
         // 对应后端接口：GET /api/listings，需校验 JWT。
@@ -229,6 +228,9 @@ actor APIClient {
             }
 
             guard (200..<300).contains(httpResponse.statusCode) else {
+                if let message = decodeErrorMessage(from: data), !message.isEmpty {
+                    throw APIError.domain(message)
+                }
                 throw APIError.httpStatus(httpResponse.statusCode, data)
             }
 
@@ -268,6 +270,11 @@ actor APIClient {
         }
 
         return request
+    }
+
+    private func decodeErrorMessage(from data: Data) -> String? {
+        guard !data.isEmpty else { return nil }
+        return (try? decoder.decode(ErrorEnvelope.self, from: data))?.message
     }
 }
 
@@ -401,4 +408,8 @@ private struct ListingResponse: Decodable {
             seller: sellerModel
         )
     }
+}
+
+private struct ErrorEnvelope: Decodable {
+    let message: String?
 }
