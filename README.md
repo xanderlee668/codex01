@@ -101,9 +101,13 @@ codex01/
   - `MarketplaceViewModel.createListing` 将发布表单转为 `CreateListingRequest` 并调用 `APIClient.createListing`，成功后把服务器返回的实体插入顶部展示。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L147】【F:Sources/Networking/APIClient.swift†L110-L167】
   - 后端应在 `POST /api/listings` 中根据 JWT 绑定卖家 ID，填充 `listing_id` 与 `seller` 信息后返回完整数据。
 
-- **收藏与站内私信**
-  - 前端通过 `MarketplaceViewModel.toggleFavorite`、`thread(for:)`、`sendMessage` 等方法维护收藏状态与私信对话；`synchronizeThreadsWithListings` 会把最新的收藏状态同步到现有线程中。【F:Sources/ViewModels/MarketplaceViewModel.swift†L133-L195】【F:Sources/Models/SampleData.swift†L247-L290】
-  - 后端后续若扩展收藏或私信接口，可按 `listing_id` 与 `seller_id` 接收 / 返回状态；当前示例仍以内存数据演示。
+- **关注与私信解锁**
+  - `MarketplaceViewModel.refreshListings` 会先请求 `GET /api/listings`，随后调用 `GET /api/social/graph` 将最新的 `following_seller_ids`、`followers_of_current_user` 写回 `UserAccount`，从而保证互相关注判定依赖后端真实数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L72-L133】【F:Sources/ViewModels/AuthViewModel.swift†L147-L211】
+  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`，接口返回最新社交图谱后立即刷新界面，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】
+
+- **收藏同步**
+  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`，并使用返回的 Listing 更新列表和消息线程，确保收藏状态持久化到数据库。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L211】
+  - `ListingRowView` 与 `ListingDetailView` 会根据 `favoriteUpdatesInFlight` 显示加载态并禁用按钮，防止重复提交。【F:Sources/Views/ListingRowView.swift†L7-L59】【F:Sources/Views/ListingDetailView.swift†L7-L74】
 
 - **行程与群聊示例**
   - `MarketplaceViewModel.createTrip`、`requestToJoin`、`approve` 与 `sendTripMessage` 等逻辑以本地数据结构模拟发布行程、审批报名和群聊体验，并在 `TripDetailView`、`TripChatView` 中消费这些状态。【F:Sources/ViewModels/MarketplaceViewModel.swift†L151-L213】【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
@@ -146,7 +150,9 @@ codex01/
     "location": "London",
     "bio": "Love riding",
     "rating": 4.8,
-    "deals_count": 12
+    "deals_count": 12,
+    "following_seller_ids": ["uuid", "uuid"],
+    "followers_of_current_user": ["uuid"]
   }
 }
 ```
@@ -155,7 +161,7 @@ codex01/
 
 - `display_name` 必填且唯一性校验可选；
 - 返回的 `token` 需在 `Authorization` 头中可被解析；
-- `user` 内的字段与前端展示直接关联，缺失会回退为默认值。
+- `user` 内的字段与前端展示直接关联，缺失会回退为默认值；`following_seller_ids` 与 `followers_of_current_user` 必须返回数组（即使为空），以便客户端恢复互相关注状态。
 
 #### 3.2 登录 `POST /api/auth/login`
 
@@ -199,13 +205,26 @@ codex01/
 ]
 ```
 
+#### 4.2 收藏与取消收藏
+
+- **收藏**：`POST /api/listings/{listing_id}/favorite`
+  - 认证：需要 `Authorization: Bearer <token>`
+  - 请求体：无
+  - 响应：返回与 `GET /api/listings` 相同结构的单个 Listing JSON，用于覆盖前端现有数据；其中 `is_favorite` 字段必须反映最新状态。
+- **取消收藏**：`DELETE /api/listings/{listing_id}/favorite`
+  - 认证：同上
+  - 请求体：无
+  - 响应：同收藏接口，`is_favorite` 为 `false`。
+
+> Spring Boot 侧可使用 `@PathVariable UUID listingId` 读取 ID，结合当前登录用户 ID 在关联表中新增或删除收藏记录，最后查询并返回最新的 Listing DTO。
+
 业务要点：
 
 - 需校验 JWT；
 - `condition`、`trade_option` 字段必须使用上述枚举值（全小写、下划线）；
 - `seller` 信息为前端展示所需，未评分时可返回 `null`，客户端会回退为 0。
 
-#### 4.2 创建列表 `POST /api/listings`
+#### 4.3 创建列表 `POST /api/listings`
 
 **Request Body**
 
@@ -228,7 +247,44 @@ codex01/
 - 成功时返回与查询接口相同结构的 `Listing`；
 - 若价格、字段缺失等校验失败，请返回 422 并附带错误描述。
 
-### 5. 错误响应约定
+### 5. 社交模块 `/api/social`
+
+#### 5.1 获取社交图谱 `GET /api/social/graph`
+
+**Response 200**
+
+```json
+{
+  "following_seller_ids": ["uuid"],
+  "followers_of_current_user": ["uuid"]
+}
+```
+
+- `following_seller_ids`：当前登录用户关注的卖家 ID 列表；
+- `followers_of_current_user`：已经关注当前用户的卖家 ID 列表；
+- 两个字段都需要返回数组（可为空）。
+
+#### 5.2 关注卖家 `POST /api/social/follows`
+
+**Request Body**
+
+```json
+{
+  "seller_id": "uuid"
+}
+```
+
+**Response 200**：返回与 `GET /api/social/graph` 相同结构，用于刷新前端社交图谱。
+
+#### 5.3 取消关注 `DELETE /api/social/follows/{seller_id}`
+
+- 认证：需要 JWT；
+- 请求体：无；
+- 响应：同上，返回最新社交图谱。
+
+> Spring Boot 推荐在 Service 中同时写入关注关系表，并保证在事务内返回最新的关注/粉丝集合。
+
+### 6. 错误响应约定
 
 - 建议统一返回：
 

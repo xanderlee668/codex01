@@ -73,6 +73,11 @@ actor APIClient {
         }
     }
 
+    struct SocialGraph: Hashable {
+        let followingSellerIDs: Set<UUID>
+        let followersOfCurrentUser: Set<UUID>
+    }
+
     struct AuthenticatedUser: Hashable {
         let userID: UUID
         let email: String
@@ -81,6 +86,7 @@ actor APIClient {
         let bio: String
         let rating: Double
         let dealsCount: Int
+        let socialGraph: SocialGraph
     }
 
     struct AuthSession {
@@ -176,6 +182,41 @@ actor APIClient {
         return try response.map { try $0.toDomain() }
     }
 
+    func fetchSocialGraph() async throws -> SocialGraph {
+        // 对应后端接口：GET /api/social/graph，返回当前用户的关注与粉丝 ID 列表。
+        // 关注成功后群聊、私信等逻辑才能正确判断互相关注。
+        let response: SocialGraphResponse = try await send(
+            path: "/social/graph",
+            method: .get,
+            requiresAuth: true
+        )
+        return response.toDomain()
+    }
+
+    func followSeller(_ sellerID: UUID) async throws -> SocialGraph {
+        // 对应后端接口：POST /api/social/follows，Body: {"seller_id": "..."}
+        // 后端需在数据库中保存关注关系，并返回最新的关注/粉丝集合。
+        let request = FollowRequest(sellerId: sellerID)
+        let response: SocialGraphResponse = try await send(
+            path: "/social/follows",
+            method: .post,
+            body: request,
+            requiresAuth: true
+        )
+        return response.toDomain()
+    }
+
+    func unfollowSeller(_ sellerID: UUID) async throws -> SocialGraph {
+        // 对应后端接口：DELETE /api/social/follows/{seller_id}
+        // 成功后返回最新关注/粉丝集合，方便前端即时刷新互相关注状态。
+        let response: SocialGraphResponse = try await send(
+            path: "/social/follows/\(sellerID.uuidString)",
+            method: .delete,
+            requiresAuth: true
+        )
+        return response.toDomain()
+    }
+
     func createListing(draft: CreateListingRequest) async throws -> SnowboardListing {
         // 对应后端接口：POST /api/listings，Body 为 CreateListingRequest。
         // 后端应根据 JWT 中用户信息设置 seller，并返回创建后的 listing 数据。
@@ -183,6 +224,28 @@ actor APIClient {
             path: "/listings",
             method: .post,
             body: draft,
+            requiresAuth: true
+        )
+        return try response.toDomain()
+    }
+
+    func favoriteListing(_ listingID: UUID) async throws -> SnowboardListing {
+        // 对应后端接口：POST /api/listings/{listing_id}/favorite。
+        // 后端需在数据库中记录收藏关系，并返回最新的 Listing 数据。
+        let response: ListingResponse = try await send(
+            path: "/listings/\(listingID.uuidString)/favorite",
+            method: .post,
+            requiresAuth: true
+        )
+        return try response.toDomain()
+    }
+
+    func unfavoriteListing(_ listingID: UUID) async throws -> SnowboardListing {
+        // 对应后端接口：DELETE /api/listings/{listing_id}/favorite。
+        // 成功后返回最新的 Listing 数据，确保前端收藏状态与服务器一致。
+        let response: ListingResponse = try await send(
+            path: "/listings/\(listingID.uuidString)/favorite",
+            method: .delete,
             requiresAuth: true
         )
         return try response.toDomain()
@@ -310,8 +373,14 @@ private struct UserResponse: Decodable {
     let bio: String?
     let rating: Double?
     let dealsCount: Int?
+    let followingSellerIds: [UUID]?
+    let followersOfCurrentUser: [UUID]?
 
     func toDomain() throws -> APIClient.AuthenticatedUser {
+        let socialGraph = APIClient.SocialGraph(
+            followingSellerIDs: Set(followingSellerIds ?? []),
+            followersOfCurrentUser: Set(followersOfCurrentUser ?? [])
+        )
         APIClient.AuthenticatedUser(
             userID: userId,
             email: email,
@@ -319,7 +388,24 @@ private struct UserResponse: Decodable {
             location: location ?? "",
             bio: bio ?? "",
             rating: rating ?? 0,
-            dealsCount: dealsCount ?? 0
+            dealsCount: dealsCount ?? 0,
+            socialGraph: socialGraph
+        )
+    }
+}
+
+private struct FollowRequest: Encodable {
+    let sellerId: UUID
+}
+
+private struct SocialGraphResponse: Decodable {
+    let followingSellerIds: [UUID]
+    let followersOfCurrentUser: [UUID]
+
+    func toDomain() -> APIClient.SocialGraph {
+        APIClient.SocialGraph(
+            followingSellerIDs: Set(followingSellerIds),
+            followersOfCurrentUser: Set(followersOfCurrentUser)
         )
     }
 }

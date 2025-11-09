@@ -6,6 +6,7 @@ import UIKit
 struct ListingRowView: View {
     let listing: SnowboardListing
     var onToggleFavorite: (() -> Void)? = nil
+    var isFavoriteUpdating: Bool = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 18) {
@@ -29,20 +30,30 @@ struct ListingRowView: View {
                     Spacer()
                     if let onToggleFavorite {
                         Button(action: onToggleFavorite) {
-                            Image(systemName: listing.isFavorite ? "heart.fill" : "heart")
-                                .font(.title3)
-                                .foregroundColor(listing.isFavorite ? .pink : .white)
-                                .padding(10)
-                                .background(
-                                    Circle()
-                                        .fill(Color.white.opacity(0.1))
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.white.opacity(0.25), lineWidth: 1)
-                                        )
-                                )
+                            ZStack {
+                                Image(systemName: listing.isFavorite ? "heart.fill" : "heart")
+                                    .font(.title3)
+                                    .foregroundColor(listing.isFavorite ? .pink : .white)
+                                    .opacity(isFavoriteUpdating ? 0 : 1)
+
+                                if isFavoriteUpdating {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .tint(.white)
+                                }
+                            }
+                            .padding(10)
+                            .background(
+                                Circle()
+                                    .fill(Color.white.opacity(0.1))
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                                    )
+                            )
                         }
                         .buttonStyle(.plain)
+                        .disabled(isFavoriteUpdating)
                         .shadow(color: (listing.isFavorite ? Color.pink : Color.black).opacity(0.35), radius: 10, x: 0, y: 4)
                     } else if listing.isFavorite {
                         Image(systemName: "heart.fill")

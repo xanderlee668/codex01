@@ -11,6 +11,10 @@ struct ListingDetailView: View {
     @State private var followAlertMessage: String?
     private let listingID: UUID
 
+    private var isFavoriteUpdating: Bool {
+        marketplace.favoriteUpdatesInFlight.contains(listingID)
+    }
+
     init(listing: SnowboardListing) {
         _localListing = State(initialValue: listing)
         listingID = listing.id
@@ -57,19 +61,27 @@ struct ListingDetailView: View {
                         }
                         Spacer()
                     Button {
-                        marketplace.toggleFavorite(for: localListing)
-                        localListing.isFavorite.toggle()
+                        Task { await marketplace.toggleFavorite(for: localListing) }
                     } label: {
-                        Label(
-                            localListing.isFavorite ? "Saved" : "Save",
+                        ZStack {
+                            Label(
+                                localListing.isFavorite ? "Saved" : "Save",
                                 systemImage: localListing.isFavorite ? "heart.fill" : "heart"
                             )
                             .labelStyle(.iconOnly)
-                            .padding(10)
-                            .background(Color(.systemGray6))
-                            .clipShape(Circle())
+                            .opacity(isFavoriteUpdating ? 0 : 1)
+
+                            if isFavoriteUpdating {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            }
                         }
+                        .padding(10)
+                        .background(Color(.systemGray6))
+                        .clipShape(Circle())
                     }
+                    .disabled(isFavoriteUpdating)
+                }
 
                     Text(localListing.description)
                         .font(.body)
@@ -191,17 +203,25 @@ private struct SellerCardView: View {
                 }
                 Spacer()
                 Button {
-                    marketplace.toggleFollow(for: seller)
+                    Task { await marketplace.toggleFollow(for: seller) }
                 } label: {
-                    Text(isFollowing ? "Following" : "Follow")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 6)
-                        .background(isFollowing ? Color(.systemGray5) : Color.accentColor.opacity(0.2))
-                        .foregroundColor(isFollowing ? .primary : .accentColor)
-                        .clipShape(Capsule())
+                    ZStack {
+                        Text(isFollowing ? "Following" : "Follow")
+                            .opacity(marketplace.isUpdatingFollow ? 0 : 1)
+                        if marketplace.isUpdatingFollow {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(isFollowing ? Color(.systemGray5) : Color.accentColor.opacity(0.2))
+                    .foregroundColor(isFollowing ? .primary : .accentColor)
+                    .clipShape(Capsule())
                 }
+                .disabled(marketplace.isUpdatingFollow)
             }
 
             Text("Curated European gear, inspected and ready for your next trip. Happy to answer any questions!")

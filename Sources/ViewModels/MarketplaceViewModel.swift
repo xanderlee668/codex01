@@ -37,9 +37,13 @@ final class MarketplaceViewModel: ObservableObject {
     @Published var tripThreads: [GroupTripThread]
     @Published var isLoading: Bool = false
     @Published var lastError: String? = nil
+    @Published private(set) var isUpdatingFollow: Bool = false
+    @Published private(set) var favoriteUpdatesInFlight: Set<UUID> = []
 
     private let apiClient: APIClient
     private var accountSnapshot: UserAccount
+
+    var onAccountChange: ((UserAccount) -> Void)?
 
     init(account: UserAccount, apiClient: APIClient, autoRefresh: Bool = true) {
         self.currentUser = account.seller
@@ -65,6 +69,7 @@ final class MarketplaceViewModel: ObservableObject {
         followersOfCurrentUser = account.followersOfCurrentUser
         accountSnapshot = account
         synchronizeSocialFeatures(resetThreads: true)
+        onAccountChange?(accountSnapshot)
         Task { await refreshListings() }
     }
 
@@ -73,9 +78,21 @@ final class MarketplaceViewModel: ObservableObject {
         isLoading = true
         lastError = nil
         do {
+            let existingPhotos = Dictionary(uniqueKeysWithValues: listings.map { ($0.id, $0.photos) })
             let remoteListings = try await apiClient.fetchListings()
-            listings = remoteListings
+            listings = remoteListings.map { listing in
+                var listing = listing
+                if let photos = existingPhotos[listing.id], !photos.isEmpty {
+                    listing.photos = photos
+                }
+                return listing
+            }
             synchronizeThreadsWithListings()
+
+            if let graph = try? await apiClient.fetchSocialGraph() {
+                apply(graph: graph)
+                synchronizeThreadsWithListings()
+            }
         } catch {
             lastError = error.localizedDescription
         }
@@ -147,10 +164,28 @@ final class MarketplaceViewModel: ObservableObject {
         }
     }
 
-    func toggleFavorite(for listing: SnowboardListing) {
+    func toggleFavorite(for listing: SnowboardListing) async {
         guard let index = listings.firstIndex(where: { $0.id == listing.id }) else { return }
-        listings[index].isFavorite.toggle()
-        synchronizeThreadsWithListings()
+        guard !favoriteUpdatesInFlight.contains(listing.id) else { return }
+
+        favoriteUpdatesInFlight.insert(listing.id)
+        defer { favoriteUpdatesInFlight.remove(listing.id) }
+
+        do {
+            let updated: SnowboardListing
+            if listing.isFavorite {
+                updated = try await apiClient.unfavoriteListing(listing.id)
+            } else {
+                updated = try await apiClient.favoriteListing(listing.id)
+            }
+            var merged = updated
+            merged.photos = listings[index].photos
+            listings[index] = merged
+            synchronizeThreadsWithListings()
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+        }
     }
 
     func isFollowing(_ seller: SnowboardListing.Seller) -> Bool {
@@ -175,11 +210,27 @@ final class MarketplaceViewModel: ObservableObject {
         }
     }
 
-    func toggleFollow(for seller: SnowboardListing.Seller) {
-        if isFollowing(seller) {
-            followingSellerIDs.remove(seller.id)
-        } else {
-            followingSellerIDs.insert(seller.id)
+    @discardableResult
+    func toggleFollow(for seller: SnowboardListing.Seller) async -> Bool {
+        guard seller.id != currentUser.id else { return false }
+
+        isUpdatingFollow = true
+        defer { isUpdatingFollow = false }
+
+        do {
+            let graph: APIClient.SocialGraph
+            if isFollowing(seller) {
+                graph = try await apiClient.unfollowSeller(seller.id)
+            } else {
+                graph = try await apiClient.followSeller(seller.id)
+            }
+            apply(graph: graph)
+            synchronizeThreadsWithListings()
+            lastError = nil
+            return true
+        } catch {
+            lastError = error.localizedDescription
+            return false
         }
     }
 
@@ -316,6 +367,14 @@ final class MarketplaceViewModel: ObservableObject {
         groupTrips = SampleData.seedTrips(for: accountSnapshot)
         tripThreads = SampleData.seedTripThreads(for: groupTrips, account: accountSnapshot)
         synchronizeThreadsWithListings(reset: resetThreads)
+    }
+
+    private func apply(graph: APIClient.SocialGraph) {
+        followingSellerIDs = graph.followingSellerIDs
+        followersOfCurrentUser = graph.followersOfCurrentUser
+        accountSnapshot.followingSellerIDs = graph.followingSellerIDs
+        accountSnapshot.followersOfCurrentUser = graph.followersOfCurrentUser
+        onAccountChange?(accountSnapshot)
     }
 
     private func synchronizeThreadsWithListings(reset: Bool = false) {

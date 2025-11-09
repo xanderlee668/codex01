@@ -164,9 +164,12 @@ final class AuthViewModel: ObservableObject {
         let account = mapToAccount(session.user)
         currentAccount = account
         if let marketplace {
+            configureAccountSync(for: marketplace)
             marketplace.configure(with: account)
         } else {
-            marketplace = MarketplaceViewModel(account: account, apiClient: apiClient)
+            let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient)
+            configureAccountSync(for: marketplace)
+            self.marketplace = marketplace
         }
         isAuthenticated = true
     }
@@ -181,7 +184,9 @@ final class AuthViewModel: ObservableObject {
             await MainActor.run {
                 let account = mapToAccount(user)
                 currentAccount = account
-                marketplace = MarketplaceViewModel(account: account, apiClient: apiClient)
+                let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient)
+                configureAccountSync(for: marketplace)
+                self.marketplace = marketplace
                 isAuthenticated = true
             }
         } catch {
@@ -199,7 +204,6 @@ final class AuthViewModel: ObservableObject {
             }
         }
     }
-}
 
     private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
         // 复制示例账号作为本地会话模板，保证关注关系、私信和群聊示例数据齐备。
@@ -218,8 +222,16 @@ final class AuthViewModel: ObservableObject {
         template.email = user.email
         template.location = user.location
         template.bio = user.bio
+        template.followingSellerIDs = user.socialGraph.followingSellerIDs
+        template.followersOfCurrentUser = user.socialGraph.followersOfCurrentUser
 
         return template
+    }
+
+    private func configureAccountSync(for marketplace: MarketplaceViewModel?) {
+        marketplace?.onAccountChange = { [weak self] account in
+            self?.currentAccount = account
+        }
     }
 }
 
