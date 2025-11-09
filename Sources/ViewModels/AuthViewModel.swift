@@ -199,6 +199,7 @@ final class AuthViewModel: ObservableObject {
             }
         }
     }
+}
 
     private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
         // 复制示例账号作为本地会话模板，保证关注关系、私信和群聊示例数据齐备。
