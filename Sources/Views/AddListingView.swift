@@ -17,6 +17,7 @@ struct AddListingView: View {
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
     /// 已转换好的预览草稿，包含压缩后的图片 Data
     @State private var photos: [ListingPhotoDraft] = []
+    @State private var submissionError: String? = nil
     @Binding var isPresented: Bool
 
     /// 产品需求：一次最多上传 6 张照片
@@ -93,6 +94,12 @@ struct AddListingView: View {
                                 .stroke(Color(.systemGray4))
                         )
                 }
+
+                if let submissionError {
+                    Text(submissionError)
+                        .font(.footnote)
+                        .foregroundColor(.red)
+                }
             }
             .navigationTitle("List snowboard")
             .navigationBarTitleDisplayMode(.inline)
@@ -104,8 +111,7 @@ struct AddListingView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Publish") {
-                        createListing()
-                        isPresented = false
+                        Task { await publishListing() }
                     }
                     .disabled(!canSubmit)
                 }
@@ -125,23 +131,31 @@ struct AddListingView: View {
         !location.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
-    /// 将表单内容组装成 SnowboardListing，并回写给列表
-    private func createListing() {
-        let newListing = SnowboardListing(
-            id: UUID(),
-            title: title,
-            description: description,
-            condition: condition,
-            price: Double(price) ?? 0,
-            location: location,
+    /// 将表单内容提交给后端，成功后刷新列表
+    private func publishListing() async {
+        guard let priceValue = Double(price) else {
+            await MainActor.run { submissionError = "Enter a valid price." }
+            return
+        }
+
+        let success = await marketplace.createListing(
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            description: description.trimmingCharacters(in: .whitespacesAndNewlines),
+            price: priceValue,
+            location: location.trimmingCharacters(in: .whitespacesAndNewlines),
             tradeOption: tradeOption,
-            isFavorite: false,
-            imageName: "board_custom",
-            photos: photos.map { SnowboardListing.Photo(id: $0.id, data: $0.data) },
-            seller: marketplace.currentUser
+            condition: condition
         )
-        marketplace.addListing(newListing)
-        resetForm()
+
+        await MainActor.run {
+            if success {
+                resetForm()
+                submissionError = nil
+                isPresented = false
+            } else {
+                submissionError = marketplace.lastError ?? "Failed to publish listing."
+            }
+        }
     }
 
     /// 成功发布后重置表单，便于继续发布下一条
@@ -154,6 +168,7 @@ struct AddListingView: View {
         condition = .likeNew
         photos.removeAll()
         selectedPhotoItems.removeAll()
+        submissionError = nil
     }
 
     /// 在预览区域删除某张图片

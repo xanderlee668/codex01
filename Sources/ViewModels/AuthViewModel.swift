@@ -1,94 +1,54 @@
 import Foundation
 import Combine
 
-/// 负责管理登录状态、账号列表与 Marketplace 的联动
+@MainActor
 final class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
     @Published var authError: String? = nil
-    @Published private(set) var accounts: [UserAccount] = []
     @Published private(set) var currentAccount: UserAccount? = nil
+    @Published private(set) var marketplace: MarketplaceViewModel? = nil
 
-    let marketplace: MarketplaceViewModel
+    private let apiClient: APIClient
+    private var restoreTask: Task<Void, Never>? = nil
 
-    var currentUser: SnowboardListing.Seller? {
-        currentAccount?.seller
-    }
+    init(apiClient: APIClient = APIClient(), restoreSessionOnLaunch: Bool = true) {
+        self.apiClient = apiClient
 
-    // MARK: - 初始化
-    init(
-        accounts: [UserAccount] = SampleData.accounts,
-        initialAccount: UserAccount? = nil,
-        isAuthenticated: Bool = false
-    ) {
-        let fallbackSeller = SampleData.marketplaceSellers.first ?? SnowboardListing.Seller(
-            id: UUID(),
-            nickname: "Rider",
-            rating: 0,
-            dealsCount: 0
-        )
-        let fallbackAccount = UserAccount(
-            id: UUID(),
-            username: "demo",
-            password: "",
-            seller: fallbackSeller,
-            followingSellerIDs: [],
-            followersOfCurrentUser: [],
-            email: "demo@snowboardswap.app",
-            location: "Chamonix, France",
-            bio: "Always chasing powder days."
-        )
-
-        let resolvedAccounts: [UserAccount]
-        if accounts.isEmpty {
-            resolvedAccounts = [fallbackAccount]
-        } else {
-            resolvedAccounts = accounts
-        }
-
-        self.accounts = resolvedAccounts
-
-        let resolvedAccount = initialAccount ?? resolvedAccounts.first ?? fallbackAccount
-        self.marketplace = MarketplaceViewModel(account: resolvedAccount)
-        self.isAuthenticated = isAuthenticated
-        if isAuthenticated {
-            currentAccount = resolvedAccount
-        } else {
-            currentAccount = nil
+        if restoreSessionOnLaunch {
+            restoreTask = Task { await restoreSession() }
         }
     }
 
-    /// 简单的本地登录校验，并将账号信息同步给市场 ViewModel
-    func signIn(username: String, password: String) {
-        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedUsername.isEmpty, !password.isEmpty else {
-            authError = "Please enter your username and password."
-            return
-        }
-
-        guard let index = accounts.firstIndex(where: { $0.username.lowercased() == trimmedUsername.lowercased() }) else {
-            authError = "No account matches that username."
-            return
-        }
-
-        let account = accounts[index]
-        guard account.password == password else {
-            authError = "Incorrect password."
-            return
-        }
-
-        authError = nil
-        currentAccount = account
-        marketplace.configure(with: account)
-        isAuthenticated = true
+    deinit {
+        restoreTask?.cancel()
     }
 
-    /// 注册流程仅在本地追加账号，用于 Demo 体验
-    func register(username: String, password: String, displayName: String) {
-        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+    func signIn(email: String, password: String) async {
+        // 对应后端登录接口：POST /api/auth/login。
+        // 输入邮箱 + 密码，成功会收到 JWT 与用户信息。
+        guard !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !password.isEmpty
+        else {
+            authError = "Please enter your email and password."
+            return
+        }
+
+        do {
+            let session = try await apiClient.login(email: email, password: password)
+            apply(session: session)
+        } catch {
+            authError = error.localizedDescription
+        }
+    }
+
+    func register(email: String, password: String, displayName: String) async {
+        // 对应后端注册接口：POST /api/auth/register。
+        // 注册成功后立即沿用后端返回的 token 进入登录态。
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDisplayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard trimmedUsername.count >= 3 else {
-            authError = "Usernames need at least 3 characters."
+        guard trimmedEmail.contains("@") else {
+            authError = "Enter a valid email address."
             return
         }
 
@@ -97,34 +57,67 @@ final class AuthViewModel: ObservableObject {
             return
         }
 
-        guard !accounts.contains(where: { $0.username.lowercased() == trimmedUsername.lowercased() }) else {
-            authError = "That username is already taken."
+        guard !trimmedDisplayName.isEmpty else {
+            authError = "Display name is required."
             return
         }
 
-        let nickname = trimmedDisplayName.isEmpty ? trimmedUsername : trimmedDisplayName
-        let newAccount = UserAccount(
-            id: UUID(),
-            username: trimmedUsername,
-            password: password,
-            seller: SnowboardListing.Seller(
-                id: UUID(),
-                nickname: nickname,
-                rating: 5.0,
-                dealsCount: 0
-            ),
-            followingSellerIDs: [],
-            followersOfCurrentUser: [],
-            email: "\(trimmedUsername)@snowboardswap.app",
-            location: "",
-            bio: ""
-        )
+        do {
+            let session = try await apiClient.register(
+                email: trimmedEmail,
+                password: password,
+                displayName: trimmedDisplayName
+            )
+            apply(session: session)
+        } catch {
+            authError = error.localizedDescription
+        }
+    }
 
-        accounts.append(newAccount)
+    func signOut() {
+        apiClient.logout()
+        currentAccount = nil
+        marketplace = nil
+        isAuthenticated = false
         authError = nil
-        currentAccount = newAccount
-        marketplace.configure(with: newAccount)
-        isAuthenticated = true
+    }
+
+    func updateProfile(
+        displayName: String,
+        email: String,
+        location: String,
+        bio: String
+    ) -> Result<Void, ProfileUpdateError> {
+        guard var account = currentAccount else { return .failure(.noActiveAccount) }
+
+        let trimmedDisplayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedDisplayName.isEmpty else { return .failure(.emptyDisplayName) }
+
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedEmail.contains("@"), trimmedEmail.contains(".") else {
+            return .failure(.invalidEmail)
+        }
+
+        account.seller.nickname = trimmedDisplayName
+        account.email = trimmedEmail
+        account.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        account.bio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        currentAccount = account
+        marketplace?.configure(with: account)
+        return .success(())
+    }
+
+    func changePassword(
+        currentPassword: String,
+        newPassword: String,
+        confirmPassword: String
+    ) -> Result<Void, PasswordChangeError> {
+        guard currentAccount != nil else { return .failure(.noActiveAccount) }
+        guard !currentPassword.isEmpty else { return .failure(.incorrectCurrentPassword) }
+        guard newPassword == confirmPassword else { return .failure(.passwordsDoNotMatch) }
+        guard newPassword.count >= 6 else { return .failure(.weakPassword) }
+        return .success(())
     }
 
     enum ProfileUpdateError: LocalizedError {
@@ -164,60 +157,89 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    /// 更新当前账号的昵称、邮箱、所在地和简介
-    func updateProfile(
-        displayName: String,
-        email: String,
-        location: String,
-        bio: String
-    ) -> Result<Void, ProfileUpdateError> {
-        guard var account = currentAccount else { return .failure(.noActiveAccount) }
-
-        let trimmedDisplayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedDisplayName.isEmpty else { return .failure(.emptyDisplayName) }
-
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmedEmail.contains("@"), trimmedEmail.contains(".") else {
-            return .failure(.invalidEmail)
-        }
-
-        account.seller.nickname = trimmedDisplayName
-        account.email = trimmedEmail
-        account.location = location.trimmingCharacters(in: .whitespacesAndNewlines)
-        account.bio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        persist(account)
-        return .success(())
-    }
-
-    /// 校验旧密码与强度后，更新本地存储的密码
-    func changePassword(
-        currentPassword: String,
-        newPassword: String,
-        confirmPassword: String
-    ) -> Result<Void, PasswordChangeError> {
-        guard var account = currentAccount else { return .failure(.noActiveAccount) }
-        guard account.password == currentPassword else { return .failure(.incorrectCurrentPassword) }
-        guard newPassword == confirmPassword else { return .failure(.passwordsDoNotMatch) }
-        guard newPassword.count >= 6 else { return .failure(.weakPassword) }
-
-        account.password = newPassword
-        persist(account)
-        return .success(())
-    }
-
-    /// 退出登录后会清空当前账号信息，返回到登录页
-    func signOut() {
-        isAuthenticated = false
-        currentAccount = nil
+    private func apply(session: APIClient.AuthSession) {
+        // 将后端返回的 AuthSession 转换成前端的 UserAccount，
+        // 并初始化关联的 MarketplaceViewModel。
         authError = nil
+        let account = mapToAccount(session.user)
+        currentAccount = account
+        if let marketplace {
+            marketplace.configure(with: account)
+        } else {
+            marketplace = MarketplaceViewModel(account: account, apiClient: apiClient)
+        }
+        isAuthenticated = true
     }
 
-    /// 用于将修改后的账号写回数组，同时刷新 Marketplace 依赖的数据
-    private func persist(_ account: UserAccount) {
-        guard let index = accounts.firstIndex(where: { $0.id == account.id }) else { return }
-        accounts[index] = account
-        currentAccount = account
-        marketplace.updateCurrentAccount(account)
+    private func restoreSession() async {
+        // App 冷启动时调用 GET /api/auth/me，
+        // 若后端校验 JWT 成功则自动恢复登录状态。
+        do {
+            guard let user = try await apiClient.fetchCurrentUser() else {
+                return
+            }
+            await MainActor.run {
+                let account = mapToAccount(user)
+                currentAccount = account
+                marketplace = MarketplaceViewModel(account: account, apiClient: apiClient)
+                isAuthenticated = true
+            }
+        } catch {
+            if case APIClient.APIError.missingToken = error {
+                return
+            }
+
+            if case APIClient.APIError.httpStatus(let code, _) = error, code == 401 {
+                apiClient.logout()
+                return
+            }
+
+            await MainActor.run {
+                authError = error.localizedDescription
+            }
+        }
+    }
+
+    private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
+        // 复制示例账号作为本地会话模板，保证关注关系、私信和群聊示例数据齐备。
+        var template = SampleData.defaultAccount
+
+        // 使用后端返回的数据覆盖动态字段，展示真实用户信息。
+        template.id = user.userID
+        template.username = user.email
+        template.password = ""
+        template.seller = SnowboardListing.Seller(
+            id: user.userID,
+            nickname: user.displayName,
+            rating: user.rating,
+            dealsCount: user.dealsCount
+        )
+        template.email = user.email
+        template.location = user.location
+        template.bio = user.bio
+
+        return template
     }
 }
+
+#if DEBUG
+extension AuthViewModel {
+    static func previewAuthenticated() -> AuthViewModel {
+        let apiClient = APIClient()
+        let model = AuthViewModel(apiClient: apiClient, restoreSessionOnLaunch: false)
+        let account = SampleData.accounts.first ?? SampleData.defaultAccount
+        model.currentAccount = account
+        model.isAuthenticated = true
+        let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
+        marketplace.listings = SampleData.seedListings
+        marketplace.groupTrips = SampleData.seedTrips(for: account)
+        marketplace.tripThreads = SampleData.seedTripThreads(for: marketplace.groupTrips, account: account)
+        model.marketplace = marketplace
+        return model
+    }
+
+    static func previewUnauthenticated() -> AuthViewModel {
+        AuthViewModel(restoreSessionOnLaunch: false)
+    }
+}
+#endif
