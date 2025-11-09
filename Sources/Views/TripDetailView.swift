@@ -179,10 +179,13 @@ struct TripDetailView_Previews: PreviewProvider {
         NavigationView {
             if let trip = SampleData.seedTrips(for: SampleData.defaultAccount).first {
                 TripDetailView(trip: trip)
-                    .environmentObject(MarketplaceViewModel())
+                    .environmentObject(
+                        MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+                    )
             } else {
                 Text("No trip")
             }
         }
     }
 }
+
