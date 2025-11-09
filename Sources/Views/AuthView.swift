@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AuthView: View {
     @EnvironmentObject private var auth: AuthViewModel
-    @State private var username: String = ""
+    @State private var email: String = ""
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
     @State private var displayName: String = ""
@@ -28,34 +28,34 @@ struct AuthView: View {
     private var isActionDisabled: Bool {
         switch mode {
         case .login:
-            return username.isEmpty || password.isEmpty
+            return email.isEmpty || password.isEmpty
         case .register:
-            return username.isEmpty || password.isEmpty || confirmPassword.isEmpty
+            return email.isEmpty || password.isEmpty || confirmPassword.isEmpty
         }
     }
 
     var body: some View {
         Group {
-            if auth.isAuthenticated {
-                // 登录成功后展示主业务 Tab
-                TabView {
+            if auth.isAuthenticated, let marketplace = auth.marketplace {
+                TabView(selection: $selectedTab) {
                     ListingListView()
-                        .environmentObject(auth.marketplace)
+                        .environmentObject(marketplace)
                         .tag(Tab.marketplace)
                         .tabItem {
                             Label("Marketplace", systemImage: "figure.snowboarding")
                         }
 
                     TripListView()
-                        .environmentObject(auth.marketplace)
+                        .environmentObject(marketplace)
                         .tag(Tab.groupTrips)
                         .tabItem {
                             Label("Group Trips", systemImage: "person.3")
                         }
-
                 }
+            } else if auth.isAuthenticated {
+                ProgressView("Loading account…")
+                    .progressViewStyle(.circular)
             } else {
-                // 登录 / 注册表单
                 ScrollView {
                     VStack(spacing: 28) {
                         VStack(spacing: 12) {
@@ -81,11 +81,12 @@ struct AuthView: View {
 
                             VStack(alignment: .leading, spacing: 18) {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Username")
+                                    Text("Email")
                                         .font(.headline)
                                         .foregroundColor(.white)
-                                    TextField("Enter username", text: $username)
+                                    TextField("you@example.com", text: $email)
                                         .textInputAutocapitalization(.never)
+                                        .keyboardType(.emailAddress)
                                         .autocorrectionDisabled()
                                         .padding(12)
                                         .background(Color.white.opacity(0.08))
@@ -155,16 +156,14 @@ struct AuthView: View {
             }
         }
         .animation(.easeInOut, value: auth.isAuthenticated)
-        // 切换模式时清理密码并重置错误
         .onChange(of: mode) { _ in
             auth.authError = nil
             password = ""
             confirmPassword = ""
         }
-        // 登录成功后清空输入，避免下次自动填充
         .onChange(of: auth.isAuthenticated) { isAuthed in
             guard isAuthed else { return }
-            username = ""
+            email = ""
             password = ""
             confirmPassword = ""
             displayName = ""
@@ -176,13 +175,13 @@ struct AuthView: View {
     private func authenticate() {
         switch mode {
         case .login:
-            auth.signIn(username: username, password: password)
+            Task { await auth.signIn(email: email, password: password) }
         case .register:
             guard password == confirmPassword else {
                 auth.authError = "Passwords do not match."
                 return
             }
-            auth.register(username: username, password: password, displayName: displayName)
+            Task { await auth.register(email: email, password: password, displayName: displayName) }
         }
     }
 }
@@ -190,6 +189,6 @@ struct AuthView: View {
 struct AuthView_Previews: PreviewProvider {
     static var previews: some View {
         AuthView()
-            .environmentObject(AuthViewModel())
+            .environmentObject(AuthViewModel.previewUnauthenticated())
     }
 }
