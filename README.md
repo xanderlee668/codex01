@@ -28,13 +28,6 @@ codex01/
 
 > 应用通过 `APIClient` 接入后端登录、注册与列表接口，同时保留内置示例数据驱动关注关系、群聊与历史消息，方便在后端尚未实现对应模块前完整演示业务流程。
 
-## ✅ 功能校验摘要
-
-- **发布行程**：`MarketplaceViewModel.createTrip` 会立即将新行程插入本地列表，`TripListView` 与 `TripDetailView` 自动响应更新，并可在 `TripChatView` 中创建群聊消息。后台实现后可将该方法改为调用 POST `/api/trips`。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L150-L197】【F:Sources/Views/TripDetailView.swift†L1-L188】
-- **收藏逻辑**：列表与详情页均通过 `MarketplaceViewModel.toggleFavorite` 修改同一份 `listings` 数据源，确保收藏状态在 UI 和会话中保持一致。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L133-L147】【F:Sources/Views/ListingDetailView.swift†L52-L118】
-- **站内私聊**：使用 `SampleData` 预置互相关注关系，`MarketplaceViewModel.thread(for:)` 仅在双方互关时创建会话，发送消息会同步追加到对应线程。后台上线后可扩展为调用私信接口。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L195】【F:Sources/Models/SampleData.swift†L247-L290】
-- **行程群聊**：登录时调用 `synchronizeSocialFeatures` 预置行程与群聊线程，`TripDetailView` 根据参与状态控制加入/审批逻辑，`TripChatView` 统一渲染消息气泡。 可在后端补充 GET/POST `/api/trips/*` 时复用现有结构。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L25-L213】【F:Sources/Views/TripChatView.swift†L1-L93】
-
 ## 🛠️ 环境要求
 
 - macOS 13 或更新版本
@@ -88,9 +81,35 @@ codex01/
 
 ## 🧩 后端接口对接文档
 
-以下文档基于当前 Swift 网络层（`Sources/Networking/APIClient.swift`）整理，后端（推荐 Spring Boot 3 + Spring Security + JPA）可按照此规范实现接口，即可与 iOS 客户端互通。所有接口均以 `JSON` 作为请求体/响应体，字段命名需使用 `snake_case`。
+以下文档基于当前 Swift 网络层（`Sources/Networking/APIClient.swift`）和现有功能逻辑整理，后端（推荐 Spring Boot 3 + Spring Security + JPA）可按照此规范实现接口，即可与 iOS 客户端互通。所有接口均以 `JSON` 作为请求体/响应体，字段命名需使用 `snake_case`。
 
-### 1. 统一配置
+### 1. 功能校验与接口映射
+
+- **登录 / 注册**
+  - 前端在 `AuthViewModel.signIn` 与 `AuthViewModel.register` 中调用 `APIClient.login` / `APIClient.register`，成功后 `apply(session:)` 会合并后端返回的用户信息，并初始化 `MarketplaceViewModel` 以触发列表刷新和社交数据同步。【F:Sources/ViewModels/AuthViewModel.swift†L24-L78】【F:Sources/ViewModels/AuthViewModel.swift†L120-L160】【F:Sources/ViewModels/MarketplaceViewModel.swift†L43-L70】
+  - 后端需提供 `POST /api/auth/login` 与 `POST /api/auth/register`，返回 `token + user` 结构，字段命名遵循 `snake_case`。
+
+- **会话恢复**
+  - App 冷启动时 `AuthViewModel` 会调用 `APIClient.fetchCurrentUser`，若 JWT 有效则重新构造 `UserAccount` 与 `MarketplaceViewModel`，并通过 `synchronizeSocialFeatures` 注入示例行程和聊天，确保收藏、站内信与群聊依旧可用。【F:Sources/ViewModels/AuthViewModel.swift†L91-L118】【F:Sources/ViewModels/MarketplaceViewModel.swift†L25-L112】【F:Sources/ViewModels/MarketplaceViewModel.swift†L189-L213】
+  - 后端需实现 `GET /api/auth/me`，校验 `Authorization: Bearer <token>` 后返回当前用户信息，若失效应返回 401。
+
+- **雪板列表查询**
+  - `MarketplaceViewModel.refreshListings` 使用 `APIClient.fetchListings` 请求后端，成功后替换本地 `listings` 并调用 `synchronizeThreadsWithListings` 让收藏和消息线程保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L72-L112】【F:Sources/ViewModels/MarketplaceViewModel.swift†L189-L213】
+  - 后端需提供 `GET /api/listings`，响应数组中的 `condition`、`trade_option` 需匹配前端枚举值，`seller` 节点提供昵称、评分与成交数。
+
+- **发布雪板信息**
+  - `MarketplaceViewModel.createListing` 将发布表单转为 `CreateListingRequest` 并调用 `APIClient.createListing`，成功后把服务器返回的实体插入顶部展示。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L147】【F:Sources/Networking/APIClient.swift†L110-L167】
+  - 后端应在 `POST /api/listings` 中根据 JWT 绑定卖家 ID，填充 `listing_id` 与 `seller` 信息后返回完整数据。
+
+- **收藏与站内私信**
+  - 前端通过 `MarketplaceViewModel.toggleFavorite`、`thread(for:)`、`sendMessage` 等方法维护收藏状态与私信对话；`synchronizeThreadsWithListings` 会把最新的收藏状态同步到现有线程中。【F:Sources/ViewModels/MarketplaceViewModel.swift†L133-L195】【F:Sources/Models/SampleData.swift†L247-L290】
+  - 后端后续若扩展收藏或私信接口，可按 `listing_id` 与 `seller_id` 接收 / 返回状态；当前示例仍以内存数据演示。
+
+- **行程与群聊示例**
+  - `MarketplaceViewModel.createTrip`、`requestToJoin`、`approve` 与 `sendTripMessage` 等逻辑以本地数据结构模拟发布行程、审批报名和群聊体验，并在 `TripDetailView`、`TripChatView` 中消费这些状态。【F:Sources/ViewModels/MarketplaceViewModel.swift†L151-L213】【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
+  - 后端若落地行程模块，可参考当前字段扩展 `/api/trips` 与 `/api/trip-chats` 等端点。
+
+### 2. 统一配置
 
 | 项目 | 说明 |
 | --- | --- |
@@ -101,9 +120,9 @@ codex01/
 
 > 建议在 Spring Boot 中使用 `@RestController` 并统一加上 `/api` 前缀，例如 `@RequestMapping("/api")`，同时配置 `OncePerRequestFilter`/`AuthenticationFilter` 解析 JWT。
 
-### 2. 鉴权模块 `/api/auth`
+### 3. 鉴权模块 `/api/auth`
 
-#### 2.1 注册 `POST /api/auth/register`
+#### 3.1 注册 `POST /api/auth/register`
 
 **Request Body**
 
@@ -138,7 +157,7 @@ codex01/
 - 返回的 `token` 需在 `Authorization` 头中可被解析；
 - `user` 内的字段与前端展示直接关联，缺失会回退为默认值。
 
-#### 2.2 登录 `POST /api/auth/login`
+#### 3.2 登录 `POST /api/auth/login`
 
 **Request Body**：与注册相同但仅包含 `email`、`password`。
 
@@ -146,15 +165,15 @@ codex01/
 
 - 登录失败时请返回 401/422 状态码，并在响应体中附带 `message` 字段便于提示。
 
-#### 2.3 获取当前用户 `GET /api/auth/me`
+#### 3.3 获取当前用户 `GET /api/auth/me`
 
 - 请求需携带 `Authorization: Bearer <token>`；
 - 返回的 `user` 结构同登录响应；
 - 主要用于 App 冷启动时恢复会话，若 Token 失效返回 401。
 
-### 3. 列表模块 `/api/listings`
+### 4. 列表模块 `/api/listings`
 
-#### 3.1 查询列表 `GET /api/listings`
+#### 4.1 查询列表 `GET /api/listings`
 
 **Response 200**
 
@@ -186,7 +205,7 @@ codex01/
 - `condition`、`trade_option` 字段必须使用上述枚举值（全小写、下划线）；
 - `seller` 信息为前端展示所需，未评分时可返回 `null`，客户端会回退为 0。
 
-#### 3.2 创建列表 `POST /api/listings`
+#### 4.2 创建列表 `POST /api/listings`
 
 **Request Body**
 
@@ -209,7 +228,7 @@ codex01/
 - 成功时返回与查询接口相同结构的 `Listing`；
 - 若价格、字段缺失等校验失败，请返回 422 并附带错误描述。
 
-### 4. 错误响应约定
+### 5. 错误响应约定
 
 - 建议统一返回：
 

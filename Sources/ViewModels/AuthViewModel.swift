@@ -82,7 +82,6 @@ final class AuthViewModel: ObservableObject {
         authError = nil
     }
 
-
     func updateProfile(
         displayName: String,
         email: String,
@@ -190,29 +189,6 @@ final class AuthViewModel: ObservableObject {
                 authError = error.localizedDescription
             }
         }
-    }
-
-    private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
-        // 后端需要在 AuthResponse.user 中返回 display_name、rating 等字段，
-        // 对应 UserAccount/Seller 的属性才能正确显示。
-        let seller = SnowboardListing.Seller(
-            id: user.userID,
-            nickname: user.displayName,
-            rating: user.rating,
-            dealsCount: user.dealsCount
-        )
-
-        return UserAccount(
-            id: user.userID,
-            username: user.email,
-            password: "",
-            seller: seller,
-            followingSellerIDs: [],
-            followersOfCurrentUser: [],
-            email: user.email,
-            location: user.location,
-            bio: user.bio
-        )
     }
 }
 
