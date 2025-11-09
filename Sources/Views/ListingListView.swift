@@ -24,9 +24,11 @@ struct ListingListView: View {
 
                                 ForEach(listings) { listing in
                                     NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                        ListingRowView(listing: listing) {
-                                            toggleFavorite(for: listing)
-                                        }
+                                        ListingRowView(
+                                            listing: listing,
+                                            onToggleFavorite: { toggleFavorite(for: listing) },
+                                            isFavoriteUpdating: marketplace.favoriteUpdatesInFlight.contains(listing.id)
+                                        )
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu {
@@ -121,7 +123,7 @@ struct ListingListView: View {
     }
 
     private func toggleFavorite(for listing: SnowboardListing) {
-        marketplace.toggleFavorite(for: listing)
+        Task { await marketplace.toggleFavorite(for: listing) }
     }
 }
 
@@ -159,7 +161,7 @@ private struct LegacyAddListingPlaceholder: View {
 struct ListingListView_Previews: PreviewProvider {
     static var previews: some View {
         ListingListView()
-            .environmentObject(MarketplaceViewModel())
-            .environmentObject(AuthViewModel())
+            .environmentObject(MarketplaceViewModel.preview())
+            .environmentObject(AuthViewModel.previewAuthenticated())
     }
 }

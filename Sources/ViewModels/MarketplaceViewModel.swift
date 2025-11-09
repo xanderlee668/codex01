@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class MarketplaceViewModel: ObservableObject {
     enum ChatStatus: Equatable {
         case available
@@ -34,46 +35,70 @@ final class MarketplaceViewModel: ObservableObject {
     @Published var threads: [MessageThread]
     @Published var groupTrips: [GroupTrip]
     @Published var tripThreads: [GroupTripThread]
+    @Published var isLoading: Bool = false
+    @Published var lastError: String? = nil
+    @Published private(set) var isUpdatingFollow: Bool = false
+    @Published private(set) var favoriteUpdatesInFlight: Set<UUID> = []
 
-    init(
-        listings: [SnowboardListing] = SampleData.seedListings,
-        account: UserAccount = SampleData.defaultAccount,
-        threads: [MessageThread]? = nil,
-        groupTrips: [GroupTrip]? = nil,
-        tripThreads: [GroupTripThread]? = nil
-    ) {
-        self.listings = listings
+    private let apiClient: APIClient
+    private var accountSnapshot: UserAccount
+
+    var onAccountChange: ((UserAccount) -> Void)?
+
+    init(account: UserAccount, apiClient: APIClient, autoRefresh: Bool = true) {
         self.currentUser = account.seller
         self.followingSellerIDs = account.followingSellerIDs
         self.followersOfCurrentUser = account.followersOfCurrentUser
+        self.listings = []
+        self.threads = []
+        self.groupTrips = []
+        self.tripThreads = []
+        self.apiClient = apiClient
+        self.accountSnapshot = account
 
-        if let threads {
-            self.threads = threads
-        } else {
-            self.threads = SampleData.seedThreads(for: listings, account: account)
+        synchronizeSocialFeatures(resetThreads: true)
+
+        if autoRefresh {
+            Task { await refreshListings() }
         }
-
-        // 使用局部变量先计算结果，避免在 init 阶段过早访问 self 属性
-        let groupTripsValue: [GroupTrip]
-        if let groupTrips {
-            groupTripsValue = groupTrips
-        } else {
-            groupTripsValue = SampleData.seedTrips(for: account)
-        }
-        self.groupTrips = groupTripsValue
-
-        let tripThreadsValue: [GroupTripThread]
-        if let tripThreads {
-            tripThreadsValue = tripThreads
-        } else {
-            tripThreadsValue = SampleData.seedTripThreads(for: groupTripsValue, account: account)
-        }
-        self.tripThreads = tripThreadsValue
-
-
     }
 
-    /// 根据关键字、交易方式、成色等条件实时过滤列表数据
+    func configure(with account: UserAccount) {
+        currentUser = account.seller
+        followingSellerIDs = account.followingSellerIDs
+        followersOfCurrentUser = account.followersOfCurrentUser
+        accountSnapshot = account
+        synchronizeSocialFeatures(resetThreads: true)
+        onAccountChange?(accountSnapshot)
+        Task { await refreshListings() }
+    }
+
+    func refreshListings() async {
+        // 调用后端 GET /api/listings，刷新前端展示的滑雪板列表。
+        isLoading = true
+        lastError = nil
+        do {
+            let existingPhotos = Dictionary(uniqueKeysWithValues: listings.map { ($0.id, $0.photos) })
+            let remoteListings = try await apiClient.fetchListings()
+            listings = remoteListings.map { listing in
+                var listing = listing
+                if let photos = existingPhotos[listing.id], !photos.isEmpty {
+                    listing.photos = photos
+                }
+                return listing
+            }
+            synchronizeThreadsWithListings()
+
+            if let graph = try? await apiClient.fetchSocialGraph() {
+                apply(graph: graph)
+                synchronizeThreadsWithListings()
+            }
+        } catch {
+            lastError = error.localizedDescription
+        }
+        isLoading = false
+    }
+
     var filteredListings: [SnowboardListing] {
         let locale = Locale.current
         let normalizedTokens = filterText
@@ -108,15 +133,59 @@ final class MarketplaceViewModel: ObservableObject {
         groupTrips.sorted(by: { $0.startDate < $1.startDate })
     }
 
-    /// 发布新的 listing 后将其插入到数组顶部，方便立即看到结果
-    func addListing(_ listing: SnowboardListing) {
-        listings.insert(listing, at: 0)
+    @discardableResult
+    func createListing(
+        title: String,
+        description: String,
+        price: Double,
+        location: String,
+        tradeOption: SnowboardListing.TradeOption,
+        condition: SnowboardListing.Condition
+    ) async -> Bool {
+        // 对应后端 POST /api/listings。
+        // 后端需根据登录用户 ID 自动设置卖家信息，并返回完整的 Listing。
+        do {
+            let draft = CreateListingRequest(
+                title: title,
+                description: description,
+                condition: condition,
+                price: price,
+                location: location,
+                tradeOption: tradeOption
+            )
+            let created = try await apiClient.createListing(draft: draft)
+            listings.insert(created, at: 0)
+            synchronizeThreadsWithListings()
+            lastError = nil
+            return true
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
     }
 
-    /// 收藏状态在列表、详情间共享，这里直接修改源数组并触发刷新
-    func toggleFavorite(for listing: SnowboardListing) {
+    func toggleFavorite(for listing: SnowboardListing) async {
         guard let index = listings.firstIndex(where: { $0.id == listing.id }) else { return }
-        listings[index].isFavorite.toggle()
+        guard !favoriteUpdatesInFlight.contains(listing.id) else { return }
+
+        favoriteUpdatesInFlight.insert(listing.id)
+        defer { favoriteUpdatesInFlight.remove(listing.id) }
+
+        do {
+            let updated: SnowboardListing
+            if listing.isFavorite {
+                updated = try await apiClient.unfavoriteListing(listing.id)
+            } else {
+                updated = try await apiClient.favoriteListing(listing.id)
+            }
+            var merged = updated
+            merged.photos = listings[index].photos
+            listings[index] = merged
+            synchronizeThreadsWithListings()
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+        }
     }
 
     func isFollowing(_ seller: SnowboardListing.Seller) -> Bool {
@@ -141,11 +210,27 @@ final class MarketplaceViewModel: ObservableObject {
         }
     }
 
-    func toggleFollow(for seller: SnowboardListing.Seller) {
-        if isFollowing(seller) {
-            followingSellerIDs.remove(seller.id)
-        } else {
-            followingSellerIDs.insert(seller.id)
+    @discardableResult
+    func toggleFollow(for seller: SnowboardListing.Seller) async -> Bool {
+        guard seller.id != currentUser.id else { return false }
+
+        isUpdatingFollow = true
+        defer { isUpdatingFollow = false }
+
+        do {
+            let graph: APIClient.SocialGraph
+            if isFollowing(seller) {
+                graph = try await apiClient.unfollowSeller(seller.id)
+            } else {
+                graph = try await apiClient.followSeller(seller.id)
+            }
+            apply(graph: graph)
+            synchronizeThreadsWithListings()
+            lastError = nil
+            return true
+        } catch {
+            lastError = error.localizedDescription
+            return false
         }
     }
 
@@ -159,9 +244,7 @@ final class MarketplaceViewModel: ObservableObject {
             return threads[index]
         }
 
-        let seedMessages = SampleData.messageHistory(for: listing.seller.id)
-        let threadID = SampleData.threadIdentifier(for: listing.seller.id) ?? UUID()
-        let newThread = MessageThread(id: threadID, listing: listing, messages: seedMessages)
+        let newThread = MessageThread(id: UUID(), listing: listing, messages: [])
         threads.append(newThread)
         return newThread
     }
@@ -199,13 +282,14 @@ final class MarketplaceViewModel: ObservableObject {
     func approve(_ request: GroupTrip.JoinRequest, in trip: GroupTrip) {
         guard trip.organizer.id == currentUser.id else { return }
         guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return }
-        groupTrips[index].pendingRequests.removeAll(where: { $0.id == request.id })
+        guard let requestIndex = groupTrips[index].pendingRequests.firstIndex(where: { $0.id == request.id }) else { return }
+        groupTrips[index].pendingRequests.remove(at: requestIndex)
         groupTrips[index].approvedParticipantIDs.insert(request.applicant.id)
     }
 
     func revoke(_ request: GroupTrip.JoinRequest, in trip: GroupTrip) {
         guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return }
-        groupTrips[index].pendingRequests.removeAll(where: { $0.id == request.id })
+        groupTrips[index].pendingRequests.removeAll { $0.id == request.id }
     }
 
     func canAccessTripChat(for trip: GroupTrip) -> Bool {
@@ -219,9 +303,7 @@ final class MarketplaceViewModel: ObservableObject {
             return tripThreads[index]
         }
 
-        let messages = SampleData.tripMessages(for: trip.id)
-        let threadID = SampleData.tripThreadIdentifier(for: trip.id) ?? UUID()
-        let thread = GroupTripThread(id: threadID, tripID: trip.id, messages: messages)
+        let thread = GroupTripThread(id: UUID(), tripID: trip.id, messages: [])
         tripThreads.append(thread)
         return thread
     }
@@ -278,18 +360,45 @@ final class MarketplaceViewModel: ObservableObject {
         groupTrips.first(where: { $0.id == id })
     }
 
-    func configure(with account: UserAccount) {
-        currentUser = account.seller
-        followingSellerIDs = account.followingSellerIDs
-        followersOfCurrentUser = account.followersOfCurrentUser
-        threads = SampleData.seedThreads(for: listings, account: account)
-        groupTrips = SampleData.seedTrips(for: account)
-        tripThreads = SampleData.seedTripThreads(for: groupTrips, account: account)
+    // MARK: - Sample data helpers
+
+    private func synchronizeSocialFeatures(resetThreads: Bool) {
+        groupTrips = SampleData.seedTrips(for: accountSnapshot)
+        tripThreads = SampleData.seedTripThreads(for: groupTrips, account: accountSnapshot)
+        synchronizeThreadsWithListings(reset: resetThreads)
     }
 
-    func updateCurrentAccount(_ account: UserAccount) {
-        currentUser = account.seller
-        followingSellerIDs = account.followingSellerIDs
-        followersOfCurrentUser = account.followersOfCurrentUser
+    private func apply(graph: APIClient.SocialGraph) {
+        followingSellerIDs = graph.followingSellerIDs
+        followersOfCurrentUser = graph.followersOfCurrentUser
+        accountSnapshot.followingSellerIDs = graph.followingSellerIDs
+        accountSnapshot.followersOfCurrentUser = graph.followersOfCurrentUser
+        onAccountChange?(accountSnapshot)
+    }
+
+    private func synchronizeThreadsWithListings(reset: Bool = false) {
+        if reset || threads.isEmpty {
+            let baseListings = listings.isEmpty ? SampleData.seedListings : listings
+            threads = SampleData.seedThreads(for: baseListings, account: accountSnapshot)
+            return
+        }
+
+        let lookup = Dictionary(uniqueKeysWithValues: listings.map { ($0.id, $0) })
+        for index in threads.indices {
+            guard let refreshed = lookup[threads[index].listing.id] else { continue }
+            threads[index].listing = refreshed
+        }
     }
 }
+
+#if DEBUG
+extension MarketplaceViewModel {
+    static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
+        let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
+        model.listings = SampleData.seedListings
+        model.groupTrips = SampleData.seedTrips(for: account)
+        model.tripThreads = SampleData.seedTripThreads(for: model.groupTrips, account: account)
+        return model
+    }
+}
+#endif
