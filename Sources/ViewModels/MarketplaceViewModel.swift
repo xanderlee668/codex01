@@ -359,6 +359,7 @@ final class MarketplaceViewModel: ObservableObject {
     func trip(withID id: UUID) -> GroupTrip? {
         groupTrips.first(where: { $0.id == id })
     }
+}
 
     // MARK: - Sample data helpers
 

@@ -165,3 +165,4 @@ struct ListingListView_Previews: PreviewProvider {
             .environmentObject(AuthViewModel.previewAuthenticated())
     }
 }
+
