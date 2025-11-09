@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class MarketplaceViewModel: ObservableObject {
     enum ChatStatus: Equatable {
         case available
@@ -34,46 +35,46 @@ final class MarketplaceViewModel: ObservableObject {
     @Published var threads: [MessageThread]
     @Published var groupTrips: [GroupTrip]
     @Published var tripThreads: [GroupTripThread]
+    @Published var isLoading: Bool = false
+    @Published var lastError: String? = nil
 
-    init(
-        listings: [SnowboardListing] = SampleData.seedListings,
-        account: UserAccount = SampleData.defaultAccount,
-        threads: [MessageThread]? = nil,
-        groupTrips: [GroupTrip]? = nil,
-        tripThreads: [GroupTripThread]? = nil
-    ) {
-        self.listings = listings
+    private let apiClient: APIClient
+
+    init(account: UserAccount, apiClient: APIClient, autoRefresh: Bool = true) {
         self.currentUser = account.seller
         self.followingSellerIDs = account.followingSellerIDs
         self.followersOfCurrentUser = account.followersOfCurrentUser
+        self.listings = []
+        self.threads = []
+        self.groupTrips = []
+        self.tripThreads = []
+        self.apiClient = apiClient
 
-        if let threads {
-            self.threads = threads
-        } else {
-            self.threads = SampleData.seedThreads(for: listings, account: account)
+        if autoRefresh {
+            Task { await refreshListings() }
         }
-
-        // 使用局部变量先计算结果，避免在 init 阶段过早访问 self 属性
-        let groupTripsValue: [GroupTrip]
-        if let groupTrips {
-            groupTripsValue = groupTrips
-        } else {
-            groupTripsValue = SampleData.seedTrips(for: account)
-        }
-        self.groupTrips = groupTripsValue
-
-        let tripThreadsValue: [GroupTripThread]
-        if let tripThreads {
-            tripThreadsValue = tripThreads
-        } else {
-            tripThreadsValue = SampleData.seedTripThreads(for: groupTripsValue, account: account)
-        }
-        self.tripThreads = tripThreadsValue
-
-
     }
 
-    /// 根据关键字、交易方式、成色等条件实时过滤列表数据
+    func configure(with account: UserAccount) {
+        currentUser = account.seller
+        followingSellerIDs = account.followingSellerIDs
+        followersOfCurrentUser = account.followersOfCurrentUser
+        Task { await refreshListings() }
+    }
+
+    func refreshListings() async {
+        // 调用后端 GET /api/listings，刷新前端展示的滑雪板列表。
+        isLoading = true
+        lastError = nil
+        do {
+            let remoteListings = try await apiClient.fetchListings()
+            listings = remoteListings
+        } catch {
+            lastError = error.localizedDescription
+        }
+        isLoading = false
+    }
+
     var filteredListings: [SnowboardListing] {
         let locale = Locale.current
         let normalizedTokens = filterText
@@ -108,12 +109,36 @@ final class MarketplaceViewModel: ObservableObject {
         groupTrips.sorted(by: { $0.startDate < $1.startDate })
     }
 
-    /// 发布新的 listing 后将其插入到数组顶部，方便立即看到结果
-    func addListing(_ listing: SnowboardListing) {
-        listings.insert(listing, at: 0)
+    @discardableResult
+    func createListing(
+        title: String,
+        description: String,
+        price: Double,
+        location: String,
+        tradeOption: SnowboardListing.TradeOption,
+        condition: SnowboardListing.Condition
+    ) async -> Bool {
+        // 对应后端 POST /api/listings。
+        // 后端需根据登录用户 ID 自动设置卖家信息，并返回完整的 Listing。
+        do {
+            let draft = CreateListingRequest(
+                title: title,
+                description: description,
+                condition: condition,
+                price: price,
+                location: location,
+                tradeOption: tradeOption
+            )
+            let created = try await apiClient.createListing(draft: draft)
+            listings.insert(created, at: 0)
+            lastError = nil
+            return true
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
     }
 
-    /// 收藏状态在列表、详情间共享，这里直接修改源数组并触发刷新
     func toggleFavorite(for listing: SnowboardListing) {
         guard let index = listings.firstIndex(where: { $0.id == listing.id }) else { return }
         listings[index].isFavorite.toggle()
@@ -159,9 +184,7 @@ final class MarketplaceViewModel: ObservableObject {
             return threads[index]
         }
 
-        let seedMessages = SampleData.messageHistory(for: listing.seller.id)
-        let threadID = SampleData.threadIdentifier(for: listing.seller.id) ?? UUID()
-        let newThread = MessageThread(id: threadID, listing: listing, messages: seedMessages)
+        let newThread = MessageThread(id: UUID(), listing: listing, messages: [])
         threads.append(newThread)
         return newThread
     }
@@ -199,13 +222,14 @@ final class MarketplaceViewModel: ObservableObject {
     func approve(_ request: GroupTrip.JoinRequest, in trip: GroupTrip) {
         guard trip.organizer.id == currentUser.id else { return }
         guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return }
-        groupTrips[index].pendingRequests.removeAll(where: { $0.id == request.id })
+        guard let requestIndex = groupTrips[index].pendingRequests.firstIndex(where: { $0.id == request.id }) else { return }
+        groupTrips[index].pendingRequests.remove(at: requestIndex)
         groupTrips[index].approvedParticipantIDs.insert(request.applicant.id)
     }
 
     func revoke(_ request: GroupTrip.JoinRequest, in trip: GroupTrip) {
         guard let index = groupTrips.firstIndex(where: { $0.id == trip.id }) else { return }
-        groupTrips[index].pendingRequests.removeAll(where: { $0.id == request.id })
+        groupTrips[index].pendingRequests.removeAll { $0.id == request.id }
     }
 
     func canAccessTripChat(for trip: GroupTrip) -> Bool {
@@ -219,9 +243,7 @@ final class MarketplaceViewModel: ObservableObject {
             return tripThreads[index]
         }
 
-        let messages = SampleData.tripMessages(for: trip.id)
-        let threadID = SampleData.tripThreadIdentifier(for: trip.id) ?? UUID()
-        let thread = GroupTripThread(id: threadID, tripID: trip.id, messages: messages)
+        let thread = GroupTripThread(id: UUID(), tripID: trip.id, messages: [])
         tripThreads.append(thread)
         return thread
     }
@@ -277,19 +299,16 @@ final class MarketplaceViewModel: ObservableObject {
     func trip(withID id: UUID) -> GroupTrip? {
         groupTrips.first(where: { $0.id == id })
     }
+}
 
-    func configure(with account: UserAccount) {
-        currentUser = account.seller
-        followingSellerIDs = account.followingSellerIDs
-        followersOfCurrentUser = account.followersOfCurrentUser
-        threads = SampleData.seedThreads(for: listings, account: account)
-        groupTrips = SampleData.seedTrips(for: account)
-        tripThreads = SampleData.seedTripThreads(for: groupTrips, account: account)
-    }
-
-    func updateCurrentAccount(_ account: UserAccount) {
-        currentUser = account.seller
-        followingSellerIDs = account.followingSellerIDs
-        followersOfCurrentUser = account.followersOfCurrentUser
+#if DEBUG
+extension MarketplaceViewModel {
+    static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
+        let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
+        model.listings = SampleData.seedListings
+        model.groupTrips = SampleData.seedTrips(for: account)
+        model.tripThreads = SampleData.seedTripThreads(for: model.groupTrips, account: account)
+        return model
     }
 }
+#endif
