@@ -271,12 +271,15 @@ struct ProfileView: View {
 
     /// 退出后重置所有本地状态并关闭页面
     private func signOut() {
-        auth.signOut()
-        clearFields()
-        infoMessage = nil
-        passwordMessage = nil
-        dismiss()
+        Task {
+            await auth.signOut()
+            clearFields()
+            infoMessage = nil
+            passwordMessage = nil
+            dismiss()
+        }
     }
+
 
     /// 清理输入框，避免上一个账号的数据残留
     private func clearFields() {

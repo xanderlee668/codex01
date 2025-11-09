@@ -162,8 +162,9 @@ actor APIClient {
             method: .get,
             requiresAuth: true
         )
-        return response.toDomain()
+        return try response.toDomain() // ✅ 只需直接调用 toDomain()
     }
+
 
     func fetchListings() async throws -> [SnowboardListing] {
         // 对应后端接口：GET /api/listings，需校验 JWT。

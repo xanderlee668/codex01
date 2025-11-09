@@ -74,13 +74,14 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    func signOut() {
-        apiClient.logout()
+    func signOut() async {
+        await apiClient.logout() // ✅ 必须 await 调用 actor 方法
         currentAccount = nil
         marketplace = nil
         isAuthenticated = false
         authError = nil
     }
+
 
     func updateProfile(
         displayName: String,
@@ -215,19 +216,32 @@ final class AuthViewModel: ObservableObject {
     }
 }
 
-#if DEBUG
+
 extension AuthViewModel {
     static func previewAuthenticated() -> AuthViewModel {
         let apiClient = APIClient()
         let model = AuthViewModel(apiClient: apiClient, restoreSessionOnLaunch: false)
-        let account = SampleData.accounts.first ?? SampleData.defaultAccount
-        model.currentAccount = account
+        let fakeSeller = SnowboardListing.Seller(
+            id: UUID(),
+            nickname: "Preview User",
+            rating: 4.9,
+            dealsCount: 20
+        )
+        let fakeAccount = UserAccount(
+            id: UUID(),
+            username: "preview@example.com",
+            password: "password",
+            seller: fakeSeller,
+            followingSellerIDs: [],
+            followersOfCurrentUser: [],
+            email: "preview@example.com",
+            location: "Zermatt",
+            bio: "Loves powder and park days"
+        )
+
+        model.currentAccount = fakeAccount
         model.isAuthenticated = true
-        let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
-        marketplace.listings = SampleData.seedListings
-        marketplace.groupTrips = SampleData.seedTrips(for: account)
-        marketplace.tripThreads = SampleData.seedTripThreads(for: marketplace.groupTrips, account: account)
-        model.marketplace = marketplace
+        model.marketplace = MarketplaceViewModel(account: fakeAccount, apiClient: apiClient, autoRefresh: false)
         return model
     }
 
@@ -235,4 +249,5 @@ extension AuthViewModel {
         AuthViewModel(restoreSessionOnLaunch: false)
     }
 }
-#endif
+
+
