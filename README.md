@@ -26,7 +26,14 @@ codex01/
 - 💬 **站内私信**：演示互相关注后的私信体验，包含简单的会话记录与跟进逻辑。
 - 🧭 **夜间玻璃风格**：统一封装渐变背景、玻璃卡片、按钮样式，提供半透明夜间配色与动效反馈。
 
-> 应用使用本地假数据演示流程，发布与消息不会调用真实接口。代码里已加入中文注释，便于理解关键流程。
+> 应用通过 `APIClient` 接入后端登录、注册与列表接口，同时保留内置示例数据驱动关注关系、群聊与历史消息，方便在后端尚未实现对应模块前完整演示业务流程。
+
+## ✅ 功能校验摘要
+
+- **发布行程**：`MarketplaceViewModel.createTrip` 会立即将新行程插入本地列表，`TripListView` 与 `TripDetailView` 自动响应更新，并可在 `TripChatView` 中创建群聊消息。后台实现后可将该方法改为调用 POST `/api/trips`。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L150-L197】【F:Sources/Views/TripDetailView.swift†L1-L188】
+- **收藏逻辑**：列表与详情页均通过 `MarketplaceViewModel.toggleFavorite` 修改同一份 `listings` 数据源，确保收藏状态在 UI 和会话中保持一致。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L133-L147】【F:Sources/Views/ListingDetailView.swift†L52-L118】
+- **站内私聊**：使用 `SampleData` 预置互相关注关系，`MarketplaceViewModel.thread(for:)` 仅在双方互关时创建会话，发送消息会同步追加到对应线程。后台上线后可扩展为调用私信接口。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L195】【F:Sources/Models/SampleData.swift†L247-L290】
+- **行程群聊**：登录时调用 `synchronizeSocialFeatures` 预置行程与群聊线程，`TripDetailView` 根据参与状态控制加入/审批逻辑，`TripChatView` 统一渲染消息气泡。 可在后端补充 GET/POST `/api/trips/*` 时复用现有结构。 【F:Sources/ViewModels/MarketplaceViewModel.swift†L25-L213】【F:Sources/Views/TripChatView.swift†L1-L93】
 
 ## 🛠️ 环境要求
 

@@ -216,32 +216,41 @@ final class AuthViewModel: ObservableObject {
     }
 }
 
+    private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
+        // 复制示例账号作为本地会话模板，保证关注关系、私信和群聊示例数据齐备。
+        var template = SampleData.defaultAccount
 
+        // 使用后端返回的数据覆盖动态字段，展示真实用户信息。
+        template.id = user.userID
+        template.username = user.email
+        template.password = ""
+        template.seller = SnowboardListing.Seller(
+            id: user.userID,
+            nickname: user.displayName,
+            rating: user.rating,
+            dealsCount: user.dealsCount
+        )
+        template.email = user.email
+        template.location = user.location
+        template.bio = user.bio
+
+        return template
+    }
+}
+
+#if DEBUG
 extension AuthViewModel {
     static func previewAuthenticated() -> AuthViewModel {
         let apiClient = APIClient()
         let model = AuthViewModel(apiClient: apiClient, restoreSessionOnLaunch: false)
-        let fakeSeller = SnowboardListing.Seller(
-            id: UUID(),
-            nickname: "Preview User",
-            rating: 4.9,
-            dealsCount: 20
-        )
-        let fakeAccount = UserAccount(
-            id: UUID(),
-            username: "preview@example.com",
-            password: "password",
-            seller: fakeSeller,
-            followingSellerIDs: [],
-            followersOfCurrentUser: [],
-            email: "preview@example.com",
-            location: "Zermatt",
-            bio: "Loves powder and park days"
-        )
-
-        model.currentAccount = fakeAccount
+        let account = SampleData.accounts.first ?? SampleData.defaultAccount
+        model.currentAccount = account
         model.isAuthenticated = true
-        model.marketplace = MarketplaceViewModel(account: fakeAccount, apiClient: apiClient, autoRefresh: false)
+        let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
+        marketplace.listings = SampleData.seedListings
+        marketplace.groupTrips = SampleData.seedTrips(for: account)
+        marketplace.tripThreads = SampleData.seedTripThreads(for: marketplace.groupTrips, account: account)
+        model.marketplace = marketplace
         return model
     }
 
@@ -249,5 +258,4 @@ extension AuthViewModel {
         AuthViewModel(restoreSessionOnLaunch: false)
     }
 }
-
-
+#endif

@@ -39,6 +39,7 @@ final class MarketplaceViewModel: ObservableObject {
     @Published var lastError: String? = nil
 
     private let apiClient: APIClient
+    private var accountSnapshot: UserAccount
 
     init(account: UserAccount, apiClient: APIClient, autoRefresh: Bool = true) {
         self.currentUser = account.seller
@@ -49,6 +50,9 @@ final class MarketplaceViewModel: ObservableObject {
         self.groupTrips = []
         self.tripThreads = []
         self.apiClient = apiClient
+        self.accountSnapshot = account
+
+        synchronizeSocialFeatures(resetThreads: true)
 
         if autoRefresh {
             Task { await refreshListings() }
@@ -59,6 +63,8 @@ final class MarketplaceViewModel: ObservableObject {
         currentUser = account.seller
         followingSellerIDs = account.followingSellerIDs
         followersOfCurrentUser = account.followersOfCurrentUser
+        accountSnapshot = account
+        synchronizeSocialFeatures(resetThreads: true)
         Task { await refreshListings() }
     }
 
@@ -69,6 +75,7 @@ final class MarketplaceViewModel: ObservableObject {
         do {
             let remoteListings = try await apiClient.fetchListings()
             listings = remoteListings
+            synchronizeThreadsWithListings()
         } catch {
             lastError = error.localizedDescription
         }
@@ -301,36 +308,37 @@ final class MarketplaceViewModel: ObservableObject {
     }
 }
 
+    // MARK: - Sample data helpers
 
-extension MarketplaceViewModel {
-    static func preview() -> MarketplaceViewModel {
-        let fakeSeller = SnowboardListing.Seller(
-            id: UUID(),
-            nickname: "Preview Seller",
-            rating: 4.8,
-            dealsCount: 12
-        )
+    private func synchronizeSocialFeatures(resetThreads: Bool) {
+        groupTrips = SampleData.seedTrips(for: accountSnapshot)
+        tripThreads = SampleData.seedTripThreads(for: groupTrips, account: accountSnapshot)
+        synchronizeThreadsWithListings(reset: resetThreads)
+    }
 
-        let fakeAccount = UserAccount(
-            id: UUID(),
-            username: "preview@example.com",
-            password: "password",
-            seller: fakeSeller,
-            followingSellerIDs: [],
-            followersOfCurrentUser: [],
-            email: "preview@example.com",
-            location: "Laax",
-            bio: "Shreds all season long!"
-        )
+    private func synchronizeThreadsWithListings(reset: Bool = false) {
+        if reset || threads.isEmpty {
+            let baseListings = listings.isEmpty ? SampleData.seedListings : listings
+            threads = SampleData.seedThreads(for: baseListings, account: accountSnapshot)
+            return
+        }
 
-        let apiClient = APIClient()
-        let model = MarketplaceViewModel(account: fakeAccount, apiClient: apiClient, autoRefresh: false)
-
-        model.listings = []
-        model.groupTrips = []
-        model.tripThreads = []
-        return model
+        let lookup = Dictionary(uniqueKeysWithValues: listings.map { ($0.id, $0) })
+        for index in threads.indices {
+            guard let refreshed = lookup[threads[index].listing.id] else { continue }
+            threads[index].listing = refreshed
+        }
     }
 }
 
-
+#if DEBUG
+extension MarketplaceViewModel {
+    static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
+        let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
+        model.listings = SampleData.seedListings
+        model.groupTrips = SampleData.seedTrips(for: account)
+        model.tripThreads = SampleData.seedTripThreads(for: model.groupTrips, account: account)
+        return model
+    }
+}
+#endif
