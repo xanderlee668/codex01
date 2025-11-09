@@ -92,6 +92,9 @@ struct CreateTripView_Previews: PreviewProvider {
     @State static var presented = true
     static var previews: some View {
         CreateTripView(isPresented: $presented)
-            .environmentObject(MarketplaceViewModel())
+            .environmentObject(
+                MarketplaceViewModel(account: SampleData.defaultAccount, apiClient: APIClient())
+            )
     }
 }
+
