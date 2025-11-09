@@ -141,7 +141,7 @@ struct ProfileView: View {
                 .font(.title3.weight(.semibold))
                 .foregroundColor(.white)
 
-            Text("Signed in as \(displayName.isEmpty ? (auth.currentAccount?.username ?? "") : displayName)")
+            Text("Signed in as \(displayName.isEmpty ? (auth.currentAccount?.email ?? "") : displayName)")
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.7))
 
@@ -291,6 +291,6 @@ struct ProfileView: View {
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         ProfileView()
-            .environmentObject(AuthViewModel(accounts: SampleData.accounts, initialAccount: SampleData.accounts.first, isAuthenticated: true))
+            .environmentObject(AuthViewModel.previewAuthenticated())
     }
 }
