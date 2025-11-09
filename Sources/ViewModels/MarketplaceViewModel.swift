@@ -63,6 +63,7 @@ final class MarketplaceViewModel: ObservableObject {
     }
 
     func refreshListings() async {
+        // 调用后端 GET /api/listings，刷新前端展示的滑雪板列表。
         isLoading = true
         lastError = nil
         do {
@@ -117,6 +118,8 @@ final class MarketplaceViewModel: ObservableObject {
         tradeOption: SnowboardListing.TradeOption,
         condition: SnowboardListing.Condition
     ) async -> Bool {
+        // 对应后端 POST /api/listings。
+        // 后端需根据登录用户 ID 自动设置卖家信息，并返回完整的 Listing。
         do {
             let draft = CreateListingRequest(
                 title: title,
@@ -298,49 +301,14 @@ final class MarketplaceViewModel: ObservableObject {
     }
 }
 
+#if DEBUG
 extension MarketplaceViewModel {
-    static func preview() -> MarketplaceViewModel {
-        // 创建一个假的卖家
-        let fakeSeller = SnowboardListing.Seller(
-            id: UUID(),
-            nickname: "Preview Rider",
-            rating: 4.8,
-            dealsCount: 23
-        )
-
-        // 创建一个假的用户账户
-        let fakeAccount = UserAccount(
-            id: UUID(),
-            username: "previewUser",
-            password: "password123",
-            seller: fakeSeller,
-            followingSellerIDs: [],
-            followersOfCurrentUser: [],
-            email: "preview@example.com",
-            location: "Zermatt",
-            bio: "Snowboarder for life!"
-        )
-
-        // 假 API 客户端
-        let apiClient = APIClient()
-
-        // 初始化 ViewModel
-        let model = MarketplaceViewModel(
-            account: fakeAccount,
-            apiClient: apiClient,
-            autoRefresh: false
-        )
-
-        // 添加一些假数据（可选）
-        model.listings = []
-        model.groupTrips = []
-        model.tripThreads = []
-
+    static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
+        let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
+        model.listings = SampleData.seedListings
+        model.groupTrips = SampleData.seedTrips(for: account)
+        model.tripThreads = SampleData.seedTripThreads(for: model.groupTrips, account: account)
         return model
     }
 }
-
-
-
-
-
+#endif

@@ -31,6 +31,8 @@ actor APIClient {
     struct Configuration {
         let baseURL: URL
         static let `default` = Configuration(baseURL: URL(string: "http://localhost:8080/api")!)
+        // ⚠️ 后端需要提供统一的 /api 前缀，例如 http://localhost:8080/api，
+        // 才能匹配这里构造出来的请求 URL。部署到线上时请将域名替换到 baseURL。
     }
 
     enum HTTPMethod: String {
@@ -105,16 +107,22 @@ actor APIClient {
 
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
+        // 说明：前端发送的 JSON 使用 snake_case，例如 display_name。
+        // 后端的 DTO（例如 LoginRequest）字段也要遵循 snake_case 才能正确接收。
         encoder.dateEncodingStrategy = .iso8601
         self.encoder = encoder
 
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
+        // 说明：后端返回 JSON 时同样要使用 snake_case，例如 user_id、listing_id。
+        // 这样才能映射到模型字段。
         decoder.dateDecodingStrategy = .iso8601
         self.decoder = decoder
     }
 
     func login(email: String, password: String) async throws -> AuthSession {
+        // 对应后端接口：POST /api/auth/login，Body: {"email": "...", "password": "..."}
+        // 后端需返回形如 {"token": "JWT", "user": {...}} 的 JSON。
         let request = LoginRequest(email: email, password: password)
         let response: AuthResponse = try await send(
             path: "/auth/login",
@@ -129,6 +137,8 @@ actor APIClient {
     }
 
     func register(email: String, password: String, displayName: String) async throws -> AuthSession {
+        // 对应后端接口：POST /api/auth/register，Body: {"email", "password", "display_name"}
+        // 成功后同样返回 token + user 信息，便于前端直接进入登录态。
         let request = RegisterRequest(email: email, password: password, displayName: displayName)
         let response: AuthResponse = try await send(
             path: "/auth/register",
@@ -145,15 +155,19 @@ actor APIClient {
     func fetchCurrentUser() async throws -> AuthenticatedUser? {
         guard let token = cachedToken ?? tokenStore.loadToken() else { return nil }
         cachedToken = token
+        // 对应后端接口：GET /api/auth/me，需要校验 Authorization: Bearer <token>
+        // 返回当前登录用户信息，字段参考 UserResponse。
         let response: UserResponse = try await send(
             path: "/auth/me",
             method: .get,
             requiresAuth: true
         )
-        return try response.toDomain()
+        return response.toDomain()
     }
 
     func fetchListings() async throws -> [SnowboardListing] {
+        // 对应后端接口：GET /api/listings，需校验 JWT。
+        // 后端返回数组，每个元素含 listing_id、title、seller 信息等。
         let response: [ListingResponse] = try await send(
             path: "/listings",
             method: .get,
@@ -163,6 +177,8 @@ actor APIClient {
     }
 
     func createListing(draft: CreateListingRequest) async throws -> SnowboardListing {
+        // 对应后端接口：POST /api/listings，Body 为 CreateListingRequest。
+        // 后端应根据 JWT 中用户信息设置 seller，并返回创建后的 listing 数据。
         let response: ListingResponse = try await send(
             path: "/listings",
             method: .post,
@@ -245,6 +261,8 @@ actor APIClient {
                 throw APIError.missingToken
             }
             cachedToken = token
+            // 说明：后续所有需要鉴权的接口，前端会自动带上 Authorization 头。
+            // 后端需通过 Spring Security 的 JWT 过滤器解析并校验。
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
@@ -326,6 +344,11 @@ struct CreateListingRequest: Encodable {
         self.tradeOption = tradeOption.apiValue
         self.isFavorite = isFavorite
         self.imageUrl = imageUrl
+        // 后端 CreateListingRequest DTO 示例（Java 记录/类均可）：
+        // public record CreateListingRequest(String title, String description, String condition,
+        //     BigDecimal price, String location, String trade_option,
+        //     Boolean is_favorite, String image_url) {}
+        // 注意字段使用 snake_case（例如 trade_option、image_url）以配合前端编码策略。
     }
 }
 

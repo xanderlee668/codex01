@@ -24,6 +24,8 @@ final class AuthViewModel: ObservableObject {
     }
 
     func signIn(email: String, password: String) async {
+        // 对应后端登录接口：POST /api/auth/login。
+        // 输入邮箱 + 密码，成功会收到 JWT 与用户信息。
         guard !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !password.isEmpty
         else {
@@ -40,6 +42,8 @@ final class AuthViewModel: ObservableObject {
     }
 
     func register(email: String, password: String, displayName: String) async {
+        // 对应后端注册接口：POST /api/auth/register。
+        // 注册成功后立即沿用后端返回的 token 进入登录态。
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDisplayName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -71,17 +75,12 @@ final class AuthViewModel: ObservableObject {
     }
 
     func signOut() {
-        Task {
-            await apiClient.logout()
-            await MainActor.run {
-                currentAccount = nil
-                marketplace = nil
-                isAuthenticated = false
-                authError = nil
-            }
-        }
+        apiClient.logout()
+        currentAccount = nil
+        marketplace = nil
+        isAuthenticated = false
+        authError = nil
     }
-
 
     func updateProfile(
         displayName: String,
@@ -159,6 +158,8 @@ final class AuthViewModel: ObservableObject {
     }
 
     private func apply(session: APIClient.AuthSession) {
+        // 将后端返回的 AuthSession 转换成前端的 UserAccount，
+        // 并初始化关联的 MarketplaceViewModel。
         authError = nil
         let account = mapToAccount(session.user)
         currentAccount = account
@@ -171,6 +172,8 @@ final class AuthViewModel: ObservableObject {
     }
 
     private func restoreSession() async {
+        // App 冷启动时调用 GET /api/auth/me，
+        // 若后端校验 JWT 成功则自动恢复登录状态。
         do {
             guard let user = try await apiClient.fetchCurrentUser() else {
                 return
@@ -189,6 +192,8 @@ final class AuthViewModel: ObservableObject {
     }
 
     private func mapToAccount(_ user: APIClient.AuthenticatedUser) -> UserAccount {
+        // 后端需要在 AuthResponse.user 中返回 display_name、rating 等字段，
+        // 对应 UserAccount/Seller 的属性才能正确显示。
         let seller = SnowboardListing.Seller(
             id: user.userID,
             nickname: user.displayName,
@@ -210,14 +215,19 @@ final class AuthViewModel: ObservableObject {
     }
 }
 
+#if DEBUG
 extension AuthViewModel {
     static func previewAuthenticated() -> AuthViewModel {
         let apiClient = APIClient()
         let model = AuthViewModel(apiClient: apiClient, restoreSessionOnLaunch: false)
-        let account = SampleData.defaultAccount
+        let account = SampleData.accounts.first ?? SampleData.defaultAccount
         model.currentAccount = account
         model.isAuthenticated = true
-        model.marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
+        let marketplace = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
+        marketplace.listings = SampleData.seedListings
+        marketplace.groupTrips = SampleData.seedTrips(for: account)
+        marketplace.tripThreads = SampleData.seedTripThreads(for: marketplace.groupTrips, account: account)
+        model.marketplace = marketplace
         return model
     }
 
@@ -225,4 +235,4 @@ extension AuthViewModel {
         AuthViewModel(restoreSessionOnLaunch: false)
     }
 }
-
+#endif
