@@ -111,6 +111,6 @@ struct DirectChatView_Previews: PreviewProvider {
             partner: SampleData.users[1],
             thread: SampleData.directThreads.first!
         )
-        .environmentObject(AuthViewModel(currentUser: SampleData.users.first))
+        .environmentObject(AuthViewModel.previewAuthenticated())
     }
 }
