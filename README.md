@@ -115,10 +115,10 @@ codex01/
 
 - **关注与私信解锁**
   - `MarketplaceViewModel.refreshListings` 会先请求 `GET /api/listings`，随后调用 `GET /api/social/graph` 将最新的 `following_seller_ids`、`followers_of_current_user` 写回 `UserAccount`，从而保证互相关注判定依赖后端真实数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L72-L133】【F:Sources/ViewModels/AuthViewModel.swift†L147-L211】
-  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`。若接口直接返回社交图谱则立即合并；若仅返回 204 状态码，则自动回退到 `GET /api/social/graph` 以拉取最新数据，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】【F:Sources/Networking/APIClient.swift†L213-L268】
+  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`。若接口直接返回社交图谱则立即合并；若仅返回 204 状态码或简单成功消息（例如 `{"message": "ok"}`），则自动回退到 `GET /api/social/graph` 以拉取最新数据，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】【F:Sources/Networking/APIClient.swift†L213-L268】
 
 - **收藏同步**
-  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`。若服务器返回最新 Listing 即时合并；若返回 204 空响应，则先本地切换心形状态并异步刷新列表，确保收藏结果最终与数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L268】
+  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`。若服务器返回最新 Listing 即时合并；若返回 204 空响应或仅返回提示消息，则先本地切换心形状态并异步刷新列表，确保收藏结果最终与数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L268】
   - `ListingRowView` 与 `ListingDetailView` 会根据 `favoriteUpdatesInFlight` 显示加载态并禁用按钮，防止重复提交。【F:Sources/Views/ListingRowView.swift†L7-L59】【F:Sources/Views/ListingDetailView.swift†L7-L74】
 
 - **行程与群聊示例**

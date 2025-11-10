@@ -140,7 +140,8 @@ final class MarketplaceViewModel: ObservableObject {
         price: Double,
         location: String,
         tradeOption: SnowboardListing.TradeOption,
-        condition: SnowboardListing.Condition
+        condition: SnowboardListing.Condition,
+        photos: [SnowboardListing.Photo] = []
     ) async -> Bool {
         // 对应后端 POST /api/listings。
         // 后端需根据登录用户 ID 自动设置卖家信息，并返回完整的 Listing。
@@ -153,7 +154,10 @@ final class MarketplaceViewModel: ObservableObject {
                 location: location,
                 tradeOption: tradeOption
             )
-            let created = try await apiClient.createListing(draft: draft)
+            var created = try await apiClient.createListing(draft: draft)
+            if !photos.isEmpty {
+                created.photos = photos
+            }
             listings.insert(created, at: 0)
             synchronizeThreadsWithListings()
             lastError = nil
