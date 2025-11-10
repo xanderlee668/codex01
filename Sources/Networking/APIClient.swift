@@ -195,26 +195,30 @@ actor APIClient {
 
     func followSeller(_ sellerID: UUID) async throws -> SocialGraph {
         // 对应后端接口：POST /api/social/follows，Body: {"seller_id": "..."}
-        // 后端需在数据库中保存关注关系，并返回最新的关注/粉丝集合。
+        // 有些实现返回 204 No Content，因此这里在拿不到响应体时会回退到 GET /api/social/graph。
         let request = FollowRequest(sellerId: sellerID)
-        let response: SocialGraphResponse = try await send(
+        if let response: SocialGraphResponse = try await sendAllowingEmpty(
             path: "/social/follows",
             method: .post,
             body: request,
             requiresAuth: true
-        )
-        return response.toDomain()
+        ) {
+            return response.toDomain()
+        }
+        return try await fetchSocialGraph()
     }
 
     func unfollowSeller(_ sellerID: UUID) async throws -> SocialGraph {
         // 对应后端接口：DELETE /api/social/follows/{seller_id}
-        // 成功后返回最新关注/粉丝集合，方便前端即时刷新互相关注状态。
-        let response: SocialGraphResponse = try await send(
+        // 如果服务器仅返回状态码，同样回退到拉取完整社交图谱，保证前端状态刷新。
+        if let response: SocialGraphResponse = try await sendAllowingEmpty(
             path: "/social/follows/\(sellerID.uuidString)",
             method: .delete,
             requiresAuth: true
-        )
-        return response.toDomain()
+        ) {
+            return response.toDomain()
+        }
+        return try await fetchSocialGraph()
     }
 
     func createListing(draft: CreateListingRequest) async throws -> SnowboardListing {
@@ -229,26 +233,30 @@ actor APIClient {
         return try response.toDomain()
     }
 
-    func favoriteListing(_ listingID: UUID) async throws -> SnowboardListing {
+    func favoriteListing(_ listingID: UUID) async throws -> SnowboardListing? {
         // 对应后端接口：POST /api/listings/{listing_id}/favorite。
-        // 后端需在数据库中记录收藏关系，并返回最新的 Listing 数据。
-        let response: ListingResponse = try await send(
+        // 如果后端返回 204，这里会返回 nil，调用方应刷新列表或自行合并本地状态。
+        if let response: ListingResponse = try await sendAllowingEmpty(
             path: "/listings/\(listingID.uuidString)/favorite",
             method: .post,
             requiresAuth: true
-        )
-        return try response.toDomain()
+        ) {
+            return try response.toDomain()
+        }
+        return nil
     }
 
-    func unfavoriteListing(_ listingID: UUID) async throws -> SnowboardListing {
+    func unfavoriteListing(_ listingID: UUID) async throws -> SnowboardListing? {
         // 对应后端接口：DELETE /api/listings/{listing_id}/favorite。
-        // 成功后返回最新的 Listing 数据，确保前端收藏状态与服务器一致。
-        let response: ListingResponse = try await send(
+        // 如果服务器仅返回状态码，这里会返回 nil，调用方需要后续刷新。
+        if let response: ListingResponse = try await sendAllowingEmpty(
             path: "/listings/\(listingID.uuidString)/favorite",
             method: .delete,
             requiresAuth: true
-        )
-        return try response.toDomain()
+        ) {
+            return try response.toDomain()
+        }
+        return nil
     }
 
     func logout() {
@@ -296,6 +304,50 @@ actor APIClient {
                 }
                 throw APIError.httpStatus(httpResponse.statusCode, data)
             }
+
+            do {
+                return try decoder.decode(Response.self, from: data)
+            } catch {
+                throw APIError.decoding(error)
+            }
+        } catch let error as APIError {
+            throw error
+        } catch {
+            throw APIError.transport(error)
+        }
+    }
+
+    private func sendAllowingEmpty<Body: Encodable, Response: Decodable>(
+        path: String,
+        method: HTTPMethod,
+        body: Body? = nil,
+        requiresAuth: Bool
+    ) async throws -> Response? {
+        var request = try makeRequest(path: path, method: method, requiresAuth: requiresAuth)
+
+        if let body {
+            do {
+                request.httpBody = try encoder.encode(body)
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            } catch {
+                throw APIError.encoding(error)
+            }
+        }
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            guard (200..<300).contains(httpResponse.statusCode) else {
+                if let message = decodeErrorMessage(from: data), !message.isEmpty {
+                    throw APIError.domain(message)
+                }
+                throw APIError.httpStatus(httpResponse.statusCode, data)
+            }
+
+            guard !data.isEmpty else { return nil }
 
             do {
                 return try decoder.decode(Response.self, from: data)

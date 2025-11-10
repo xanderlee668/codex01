@@ -21,12 +21,24 @@ codex01/
 
 - 🔍 **列表与筛选**：支持按地点、关键词、交易方式、成色等条件筛选雪板，并会对卖家昵称一起进行检索。
 - 🖼️ **多图发布**：发布雪具时一次最多选择 6 张照片，支持预览、删除与自动压缩，兼容 iOS 16+ Photos Picker。
-- ❤️ **收藏与同步**：在列表或详情页切换收藏状态，界面与消息线程会自动保持同步。
+- ❤️ **收藏与同步**：收藏操作会实时调用后端接口，遇到 `204 No Content` 也能自动回退到刷新列表，确保状态写入数据库后在前端正确还原。
 - 📝 **个人资料**：在左上角头像入口查看个人信息、修改资料、变更密码或退出登录。
 - 💬 **站内私信**：演示互相关注后的私信体验，包含简单的会话记录与跟进逻辑。
 - 🧭 **夜间玻璃风格**：统一封装渐变背景、玻璃卡片、按钮样式，提供半透明夜间配色与动效反馈。
 
 > 应用通过 `APIClient` 接入后端登录、注册与列表接口，同时保留内置示例数据驱动关注关系、群聊与历史消息，方便在后端尚未实现对应模块前完整演示业务流程。
+
+## ✅ 功能完成度总览
+
+| 模块 | 前端状态 | 后端交互 | 说明 |
+| --- | --- | --- | --- |
+| 账号登录 / 注册 | ✅ 已完成 | ✅ `POST /api/auth/login` / `POST /api/auth/register` | 成功后自动保存 JWT 并初始化市场数据。 |
+| 会话恢复 | ✅ 已完成 | ✅ `GET /api/auth/me` | 启动时检测本地 Token 并回退到未登录态或自动登录。 |
+| 列表浏览 / 筛选 | ✅ 已完成 | ✅ `GET /api/listings` | 所有字段均从后端映射，支持本地筛选。 |
+| 发布雪板 | ✅ 已完成 | ✅ `POST /api/listings` | 以 JSON 表单提交，服务器返回创建后的实体。 |
+| 收藏 | ✅ 已完成 | ✅ `POST`/`DELETE /api/listings/{id}/favorite` | 兼容 200 + JSON 与 204 空响应两种实现，并在必要时自动刷新列表。 |
+| 关注 / 私信解锁 | ✅ 已完成 | ✅ `POST`/`DELETE /api/social/follows`、`GET /api/social/graph` | 支持互相关注判断，即使关注接口仅返回状态码也能同步社交图谱。 |
+| 行程 / 群聊示例 | ✅ 已完成 | ⏳ 本地样例 | 依旧使用本地示例数据驱动，便于后续扩展真实接口。 |
 
 ## 🛠️ 环境要求
 
@@ -103,10 +115,10 @@ codex01/
 
 - **关注与私信解锁**
   - `MarketplaceViewModel.refreshListings` 会先请求 `GET /api/listings`，随后调用 `GET /api/social/graph` 将最新的 `following_seller_ids`、`followers_of_current_user` 写回 `UserAccount`，从而保证互相关注判定依赖后端真实数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L72-L133】【F:Sources/ViewModels/AuthViewModel.swift†L147-L211】
-  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`，接口返回最新社交图谱后立即刷新界面，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】
+  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`。若接口直接返回社交图谱则立即合并；若仅返回 204 状态码，则自动回退到 `GET /api/social/graph` 以拉取最新数据，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】【F:Sources/Networking/APIClient.swift†L213-L268】
 
 - **收藏同步**
-  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`，并使用返回的 Listing 更新列表和消息线程，确保收藏状态持久化到数据库。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L211】
+  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`。若服务器返回最新 Listing 即时合并；若返回 204 空响应，则先本地切换心形状态并异步刷新列表，确保收藏结果最终与数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L268】
   - `ListingRowView` 与 `ListingDetailView` 会根据 `favoriteUpdatesInFlight` 显示加载态并禁用按钮，防止重复提交。【F:Sources/Views/ListingRowView.swift†L7-L59】【F:Sources/Views/ListingDetailView.swift†L7-L74】
 
 - **行程与群聊示例**

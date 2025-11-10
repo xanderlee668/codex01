@@ -172,15 +172,21 @@ final class MarketplaceViewModel: ObservableObject {
         defer { favoriteUpdatesInFlight.remove(listing.id) }
 
         do {
-            let updated: SnowboardListing
+            let updated: SnowboardListing?
             if listing.isFavorite {
                 updated = try await apiClient.unfavoriteListing(listing.id)
             } else {
                 updated = try await apiClient.favoriteListing(listing.id)
             }
-            var merged = updated
-            merged.photos = listings[index].photos
-            listings[index] = merged
+
+            if var merged = updated {
+                merged.photos = listings[index].photos
+                listings[index] = merged
+            } else {
+                listings[index].isFavorite.toggle()
+                Task { [weak self] in await self?.refreshListings() }
+            }
+
             synchronizeThreadsWithListings()
             lastError = nil
         } catch {
