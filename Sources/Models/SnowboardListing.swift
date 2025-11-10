@@ -63,3 +63,59 @@ struct SnowboardListing: Identifiable, Hashable {
         SnowboardListing.formatter.string(from: NSNumber(value: price)) ?? "£0"
     }
 }
+
+extension SnowboardListing.Condition {
+    init?(apiValue: String) {
+        switch apiValue.lowercased() {
+        case "new":
+            self = .new
+        case "like_new":
+            self = .likeNew
+        case "good":
+            self = .good
+        case "worn":
+            self = .worn
+        default:
+            return nil
+        }
+    }
+
+    var apiValue: String {
+        switch self {
+        case .new:
+            return "new"
+        case .likeNew:
+            return "like_new"
+        case .good:
+            return "good"
+        case .worn:
+            return "worn"
+        }
+    }
+}
+
+extension SnowboardListing.TradeOption {
+    init?(apiValue: String) {
+        switch apiValue.lowercased() {
+        case "face_to_face":
+            self = .faceToFace
+        case "courier":
+            self = .courier
+        case "hybrid":
+            self = .hybrid
+        default:
+            return nil
+        }
+    }
+
+    var apiValue: String {
+        switch self {
+        case .faceToFace:
+            return "face_to_face"
+        case .courier:
+            return "courier"
+        case .hybrid:
+            return "hybrid"
+        }
+    }
+}
