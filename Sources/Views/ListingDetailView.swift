@@ -312,7 +312,14 @@ struct ListingDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             ListingDetailView(listing: SampleData.seedListings.first!)
-                .environmentObject(MarketplaceViewModel())
+                .environmentObject(
+                    MarketplaceViewModel(
+                        account: SampleData.defaultAccount,
+                        apiClient: APIClient(),
+                        autoRefresh: false
+                    )
+                )
+
         }
     }
 }

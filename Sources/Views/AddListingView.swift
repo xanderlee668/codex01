@@ -283,7 +283,30 @@ private struct ListingPhotoPreview: View {
 @available(iOS 16.0, *)
 struct AddListingView_Previews: PreviewProvider {
     static var previews: some View {
-        AddListingView(isPresented: .constant(true))
-            .environmentObject(MarketplaceViewModel())
+        // 构造一个假的账号（完全按你项目的 UserAccount 字段来）
+        let account = UserAccount(
+            id: UUID(),
+            username: "preview@example.com",
+            password: "",
+            seller: SnowboardListing.Seller(
+                id: UUID(),
+                nickname: "PreviewRider",
+                rating: 4.8,
+                dealsCount: 23
+            ),
+            followingSellerIDs: [],
+            followersOfCurrentUser: [],
+            email: "preview@example.com",
+            location: "Zermatt",
+            bio: "Snowboarder for life!"
+        )
+
+        let apiClient = APIClient()
+        let vm = MarketplaceViewModel(account: account, apiClient: apiClient, autoRefresh: false)
+
+        return AddListingView(isPresented: .constant(true))
+            .environmentObject(vm)
     }
 }
+
+
