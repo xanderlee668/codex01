@@ -351,6 +351,10 @@ actor APIClient {
 
             do {
                 return try decoder.decode(Response.self, from: data)
+            } catch is DecodingError {
+                // 如果后端仅返回简单的成功消息或布尔值，这里允许回退到调用方
+                // 的兜底逻辑（例如重新拉取社交图谱或列表），以保持兼容性。
+                return nil
             } catch {
                 throw APIError.decoding(error)
             }
