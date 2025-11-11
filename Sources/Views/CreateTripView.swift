@@ -12,13 +12,15 @@ struct CreateTripView: View {
     @State private var maximumParticipants: Int = 6
     @State private var estimatedCost: Double = 320
     @State private var tripDescription: String = ""
+    @State private var isSubmitting: Bool = false
 
     private var isCreateDisabled: Bool {
         title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         resort.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         departureLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
         minimumParticipants < 1 ||
-        maximumParticipants < minimumParticipants
+        maximumParticipants < minimumParticipants ||
+        isSubmitting
     }
 
     var body: some View {
@@ -71,20 +73,31 @@ struct CreateTripView: View {
     }
 
     private func createTrip() {
+        guard !isSubmitting else { return }
+
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedResort = resort.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDeparture = departureLocation.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedDescription = tripDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-        _ = marketplace.createTrip(
-            title: trimmedTitle,
-            resort: trimmedResort,
-            startDate: startDate,
-            departureLocation: trimmedDeparture,
-            participantRange: minimumParticipants...maximumParticipants,
-            estimatedCostPerPerson: estimatedCost,
-            description: trimmedDescription.isEmpty ? "Group ride organised via Snowboard Swap." : trimmedDescription
-        )
-        isPresented = false
+
+        isSubmitting = true
+        Task {
+            let succeeded = await marketplace.createTrip(
+                title: trimmedTitle,
+                resort: trimmedResort,
+                startDate: startDate,
+                departureLocation: trimmedDeparture,
+                participantRange: minimumParticipants...maximumParticipants,
+                estimatedCostPerPerson: estimatedCost,
+                description: trimmedDescription.isEmpty ? "Group ride organised via Snowboard Swap." : trimmedDescription
+            )
+            await MainActor.run {
+                isSubmitting = false
+                if succeeded {
+                    isPresented = false
+                }
+            }
+        }
     }
 }
 

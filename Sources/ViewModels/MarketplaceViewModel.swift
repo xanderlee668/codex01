@@ -61,6 +61,8 @@ final class MarketplaceViewModel: ObservableObject {
         if autoRefresh {
             Task { await refreshListings() }
         }
+
+        Task { await refreshTrips(resetThreads: true) }
     }
 
     func configure(with account: UserAccount) {
@@ -70,7 +72,10 @@ final class MarketplaceViewModel: ObservableObject {
         accountSnapshot = account
         synchronizeSocialFeatures(resetThreads: true)
         onAccountChange?(accountSnapshot)
-        Task { await refreshListings() }
+        Task {
+            await refreshListings()
+            await refreshTrips(resetThreads: true)
+        }
     }
 
     func refreshListings() async {
@@ -140,7 +145,8 @@ final class MarketplaceViewModel: ObservableObject {
         price: Double,
         location: String,
         tradeOption: SnowboardListing.TradeOption,
-        condition: SnowboardListing.Condition
+        condition: SnowboardListing.Condition,
+        photos: [SnowboardListing.Photo] = []
     ) async -> Bool {
         // 对应后端 POST /api/listings。
         // 后端需根据登录用户 ID 自动设置卖家信息，并返回完整的 Listing。
@@ -153,7 +159,10 @@ final class MarketplaceViewModel: ObservableObject {
                 location: location,
                 tradeOption: tradeOption
             )
-            let created = try await apiClient.createListing(draft: draft)
+            var created = try await apiClient.createListing(draft: draft)
+            if !photos.isEmpty {
+                created.photos = photos
+            }
             listings.insert(created, at: 0)
             synchronizeThreadsWithListings()
             lastError = nil
@@ -336,6 +345,31 @@ final class MarketplaceViewModel: ObservableObject {
         return message
     }
 
+    func refreshTrips(resetThreads: Bool = false) async {
+        do {
+            let remoteTrips = try await apiClient.fetchTrips()
+            let validIDs = Set(remoteTrips.map { $0.id })
+
+            groupTrips = remoteTrips
+            if resetThreads {
+                tripThreads = []
+            } else {
+                tripThreads.removeAll { !validIDs.contains($0.tripID) }
+            }
+
+            lastError = nil
+        } catch {
+            if groupTrips.isEmpty {
+                groupTrips = SampleData.seedTrips(for: accountSnapshot)
+            }
+            if tripThreads.isEmpty {
+                tripThreads = SampleData.seedTripThreads(for: groupTrips, account: accountSnapshot)
+            }
+            lastError = error.localizedDescription
+        }
+    }
+
+    @discardableResult
     func createTrip(
         title: String,
         resort: String,
@@ -344,22 +378,28 @@ final class MarketplaceViewModel: ObservableObject {
         participantRange: ClosedRange<Int>,
         estimatedCostPerPerson: Double,
         description: String
-    ) -> GroupTrip {
-        let trip = GroupTrip(
-            id: UUID(),
-            title: title,
-            resort: resort,
-            departureLocation: departureLocation,
-            startDate: startDate,
-            participantRange: participantRange,
-            estimatedCostPerPerson: estimatedCostPerPerson,
-            description: description,
-            organizer: currentUser,
-            approvedParticipantIDs: [] as Set<UUID>,
-            pendingRequests: []
-        )
-        groupTrips.insert(trip, at: 0)
-        return trip
+    ) async -> Bool {
+        do {
+            let draft = CreateTripRequest(
+                title: title,
+                resort: resort,
+                departureLocation: departureLocation,
+                startDate: startDate,
+                minimumParticipants: participantRange.lowerBound,
+                maximumParticipants: participantRange.upperBound,
+                estimatedCostPerPerson: estimatedCostPerPerson,
+                description: description
+            )
+            let created = try await apiClient.createTrip(draft: draft)
+            groupTrips.insert(created, at: 0)
+            tripThreads.removeAll { $0.tripID == created.id }
+            lastError = nil
+            Task { [weak self] in await self?.refreshTrips() }
+            return true
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
     }
 
     func trip(withID id: UUID) -> GroupTrip? {
@@ -370,8 +410,12 @@ final class MarketplaceViewModel: ObservableObject {
     // MARK: - Sample data helpers
 
     private func synchronizeSocialFeatures(resetThreads: Bool) {
-        groupTrips = SampleData.seedTrips(for: accountSnapshot)
-        tripThreads = SampleData.seedTripThreads(for: groupTrips, account: accountSnapshot)
+        if groupTrips.isEmpty {
+            groupTrips = SampleData.seedTrips(for: accountSnapshot)
+        }
+        if tripThreads.isEmpty {
+            tripThreads = SampleData.seedTripThreads(for: groupTrips, account: accountSnapshot)
+        }
         synchronizeThreadsWithListings(reset: resetThreads)
     }
 
