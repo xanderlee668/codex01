@@ -244,16 +244,18 @@ actor APIClient {
         return try response.map { try $0.toDomain() }
     }
 
-    func createTrip(draft: CreateTripRequest) async throws -> GroupTrip {
+    func createTrip(draft: CreateTripRequest) async throws -> GroupTrip? {
         // 对应后端接口：POST /api/trips，Body 为 CreateTripRequest。
         // 服务端需根据 JWT 解析组织者身份，并返回持久化后的行程实体。
-        let response: TripResponse = try await send(
+        if let response: TripResponse = try await sendAllowingEmpty(
             path: "/trips",
             method: .post,
             body: draft,
             requiresAuth: true
-        )
-        return try response.toDomain()
+        ) {
+            return try response.toDomain()
+        }
+        return nil
     }
 
     func favoriteListing(_ listingID: UUID) async throws -> SnowboardListing? {
@@ -612,6 +614,7 @@ struct CreateListingRequest: Encodable {
 }
 
 struct CreateTripRequest: Encodable {
+    let organizerID: UUID?
     let title: String
     let resort: String
     let departureLocation: String
@@ -623,6 +626,10 @@ struct CreateTripRequest: Encodable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        if let organizerID {
+            try container.encode(organizerID, forKey: .organizerIDSnake)
+            try container.encode(organizerID, forKey: .organizerIDCamel)
+        }
         try container.encode(title, forKey: .title)
         try container.encode(resort, forKey: .resort)
         try container.encode(departureLocation, forKey: .departureLocationSnake)
@@ -639,6 +646,8 @@ struct CreateTripRequest: Encodable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case organizerIDSnake = "organizer_id"
+        case organizerIDCamel = "organizerId"
         case title
         case resort
         case departureLocationSnake = "departure_location"

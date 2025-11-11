@@ -381,6 +381,7 @@ final class MarketplaceViewModel: ObservableObject {
     ) async -> Bool {
         do {
             let draft = CreateTripRequest(
+                organizerID: currentUser.id,
                 title: title,
                 resort: resort,
                 departureLocation: departureLocation,
@@ -390,9 +391,10 @@ final class MarketplaceViewModel: ObservableObject {
                 estimatedCostPerPerson: estimatedCostPerPerson,
                 description: description
             )
-            let created = try await apiClient.createTrip(draft: draft)
-            groupTrips.insert(created, at: 0)
-            tripThreads.removeAll { $0.tripID == created.id }
+            if let created = try await apiClient.createTrip(draft: draft) {
+                groupTrips.insert(created, at: 0)
+                tripThreads.removeAll { $0.tripID == created.id }
+            }
             lastError = nil
             Task { [weak self] in await self?.refreshTrips() }
             return true

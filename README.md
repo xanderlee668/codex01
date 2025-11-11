@@ -123,7 +123,7 @@ codex01/
 
 - **行程与群聊**
   - `MarketplaceViewModel.refreshTrips` 会调用 `GET /api/trips` 获取后端存储的组团行程，并将本地群聊线程与最新行程列表对齐；若接口暂不可用会自动回退到示例数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L1-L414】
-  - `MarketplaceViewModel.createTrip` 使用 `POST /api/trips` 将新行程提交到服务器，成功后立即插入本地列表并触发一次刷新以确保和数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L334-L414】【F:Sources/Networking/APIClient.swift†L168-L283】
+  - `MarketplaceViewModel.createTrip` 使用 `POST /api/trips` 将新行程提交到服务器，成功后立即插入本地列表并触发一次刷新以确保和数据库保持一致。请求体会同时携带 `organizer_id` 与 `organizerId` 字段，便于后端既可以依赖 JWT，也可以直接读取组织者 ID；若后端仅返回状态码或成功消息，前端会自动回退到 `GET /api/trips` 重新同步最新行程。【F:Sources/ViewModels/MarketplaceViewModel.swift†L334-L414】【F:Sources/Networking/APIClient.swift†L168-L283】
   - 行程详情与群聊界面仍沿用本地线程数据，后端若继续扩展报名与聊天接口，可在此基础上补充 `/api/trip-chats` 等端点。【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
 
 ### 2. 统一配置
