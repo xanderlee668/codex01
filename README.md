@@ -38,7 +38,7 @@ codex01/
 | 发布雪板 | ✅ 已完成 | ✅ `POST /api/listings` | 以 JSON 表单提交，服务器返回创建后的实体。 |
 | 收藏 | ✅ 已完成 | ✅ `POST`/`DELETE /api/listings/{id}/favorite` | 兼容 200 + JSON 与 204 空响应两种实现，并在必要时自动刷新列表。 |
 | 关注 / 私信解锁 | ✅ 已完成 | ✅ `POST`/`DELETE /api/social/follows`、`GET /api/social/graph` | 支持互相关注判断，即使关注接口仅返回状态码也能同步社交图谱。 |
-| 行程 / 群聊示例 | ✅ 已完成 | ⏳ 本地样例 | 依旧使用本地示例数据驱动，便于后续扩展真实接口。 |
+| 行程 / 群聊 | ✅ 已完成 | ✅ `GET /api/trips`、`POST /api/trips` | 发布与刷新行程均写入数据库，群聊仍使用本地示例线程。 |
 
 ## 🛠️ 环境要求
 
@@ -115,15 +115,16 @@ codex01/
 
 - **关注与私信解锁**
   - `MarketplaceViewModel.refreshListings` 会先请求 `GET /api/listings`，随后调用 `GET /api/social/graph` 将最新的 `following_seller_ids`、`followers_of_current_user` 写回 `UserAccount`，从而保证互相关注判定依赖后端真实数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L72-L133】【F:Sources/ViewModels/AuthViewModel.swift†L147-L211】
-  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`。若接口直接返回社交图谱则立即合并；若仅返回 204 状态码，则自动回退到 `GET /api/social/graph` 以拉取最新数据，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】【F:Sources/Networking/APIClient.swift†L213-L268】
+  - `MarketplaceViewModel.toggleFollow` 会根据当前状态调用 `POST /api/social/follows` 或 `DELETE /api/social/follows/{seller_id}`。若接口直接返回社交图谱则立即合并；若仅返回 204 状态码或简单成功消息（例如 `{"message": "ok"}`），则自动回退到 `GET /api/social/graph` 以拉取最新数据，避免出现“互相关注后仍无法私聊”的问题。【F:Sources/ViewModels/MarketplaceViewModel.swift†L149-L199】【F:Sources/Networking/APIClient.swift†L85-L147】【F:Sources/Networking/APIClient.swift†L213-L268】
 
 - **收藏同步**
-  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`。若服务器返回最新 Listing 即时合并；若返回 204 空响应，则先本地切换心形状态并异步刷新列表，确保收藏结果最终与数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L268】
+  - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`。若服务器返回最新 Listing 即时合并；若返回 204 空响应或仅返回提示消息，则先本地切换心形状态并异步刷新列表，确保收藏结果最终与数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L268】
   - `ListingRowView` 与 `ListingDetailView` 会根据 `favoriteUpdatesInFlight` 显示加载态并禁用按钮，防止重复提交。【F:Sources/Views/ListingRowView.swift†L7-L59】【F:Sources/Views/ListingDetailView.swift†L7-L74】
 
-- **行程与群聊示例**
-  - `MarketplaceViewModel.createTrip`、`requestToJoin`、`approve` 与 `sendTripMessage` 等逻辑以本地数据结构模拟发布行程、审批报名和群聊体验，并在 `TripDetailView`、`TripChatView` 中消费这些状态。【F:Sources/ViewModels/MarketplaceViewModel.swift†L151-L213】【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
-  - 后端若落地行程模块，可参考当前字段扩展 `/api/trips` 与 `/api/trip-chats` 等端点。
+- **行程与群聊**
+  - `MarketplaceViewModel.refreshTrips` 会调用 `GET /api/trips` 获取后端存储的组团行程，并将本地群聊线程与最新行程列表对齐；若接口暂不可用会自动回退到示例数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L1-L414】
+  - `MarketplaceViewModel.createTrip` 使用 `POST /api/trips` 将新行程提交到服务器，成功后立即插入本地列表并触发一次刷新以确保和数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L334-L414】【F:Sources/Networking/APIClient.swift†L168-L283】
+  - 行程详情与群聊界面仍沿用本地线程数据，后端若继续扩展报名与聊天接口，可在此基础上补充 `/api/trip-chats` 等端点。【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
 
 ### 2. 统一配置
 

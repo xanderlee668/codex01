@@ -138,13 +138,16 @@ struct AddListingView: View {
             return
         }
 
+        let photoDrafts = photos.map { SnowboardListing.Photo(data: $0.data) }
+
         let success = await marketplace.createListing(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             description: description.trimmingCharacters(in: .whitespacesAndNewlines),
             price: priceValue,
             location: location.trimmingCharacters(in: .whitespacesAndNewlines),
             tradeOption: tradeOption,
-            condition: condition
+            condition: condition,
+            photos: photoDrafts
         )
 
         await MainActor.run {
