@@ -168,7 +168,7 @@ actor APIClient {
             method: .get,
             requiresAuth: true
         )
-        return response.toDomain()
+        return try response.toDomain()
     }
 
     func fetchListings() async throws -> [SnowboardListing] {
@@ -214,6 +214,7 @@ actor APIClient {
         if let response: SocialGraphResponse = try await sendAllowingEmpty(
             path: "/social/follows/\(sellerID.uuidString)",
             method: .delete,
+            body: EmptyBody(),
             requiresAuth: true
         ) {
             return response.toDomain()
@@ -263,6 +264,7 @@ actor APIClient {
         if let response: ListingResponse = try await sendAllowingEmpty(
             path: "/listings/\(listingID.uuidString)/favorite",
             method: .post,
+            body: EmptyBody(),
             requiresAuth: true
         ) {
             return try response.toDomain()
@@ -276,6 +278,7 @@ actor APIClient {
         if let response: ListingResponse = try await sendAllowingEmpty(
             path: "/listings/\(listingID.uuidString)/favorite",
             method: .delete,
+            body: EmptyBody(),
             requiresAuth: true
         ) {
             return try response.toDomain()
@@ -502,7 +505,7 @@ private struct UserResponse: Decodable {
             followingSellerIDs: Set(followingSellerIds ?? []),
             followersOfCurrentUser: Set(followersOfCurrentUser ?? [])
         )
-        APIClient.AuthenticatedUser(
+        return APIClient.AuthenticatedUser(    // ✅ 添加 return
             userID: userId,
             email: email,
             displayName: displayName,
@@ -513,6 +516,7 @@ private struct UserResponse: Decodable {
             socialGraph: socialGraph
         )
     }
+
 }
 
 private struct FollowRequest: Encodable {
@@ -659,6 +663,7 @@ struct CreateTripRequest: Encodable {
         case description
     }
 }
+
 
 private struct ListingResponse: Decodable {
     struct Seller: Decodable {
