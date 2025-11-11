@@ -655,16 +655,6 @@ struct CreateTripRequest: Encodable {
     }
 }
 
-struct CreateTripRequest: Encodable {
-    let title: String
-    let resort: String
-    let departureLocation: String
-    let startDate: Date
-    let minimumParticipants: Int
-    let maximumParticipants: Int
-    let estimatedCostPerPerson: Double
-    let description: String
-}
 
 private struct ListingResponse: Decodable {
     struct Seller: Decodable {
