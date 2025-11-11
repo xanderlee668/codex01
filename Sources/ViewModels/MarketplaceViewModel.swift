@@ -369,7 +369,7 @@ final class MarketplaceViewModel: ObservableObject {
     func trip(withID id: UUID) -> GroupTrip? {
         groupTrips.first(where: { $0.id == id })
     }
-}
+
 
     // MARK: - Sample data helpers
 
@@ -402,7 +402,7 @@ final class MarketplaceViewModel: ObservableObject {
     }
 }
 
-#if DEBUG
+
 extension MarketplaceViewModel {
     static func preview(account: UserAccount = SampleData.defaultAccount) -> MarketplaceViewModel {
         let model = MarketplaceViewModel(account: account, apiClient: APIClient(), autoRefresh: false)
@@ -412,4 +412,4 @@ extension MarketplaceViewModel {
         return model
     }
 }
-#endif
+
