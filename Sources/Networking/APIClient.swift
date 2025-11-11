@@ -233,6 +233,30 @@ actor APIClient {
         return try response.toDomain()
     }
 
+    func fetchTrips() async throws -> [GroupTrip] {
+        // 对应后端接口：GET /api/trips，返回当前可见的组团行程列表。
+        let response: [TripResponse] = try await send(
+            path: "/trips",
+            method: .get,
+            requiresAuth: true
+        )
+        return try response.map { try $0.toDomain() }
+    }
+
+    func createTrip(draft: CreateTripRequest) async throws -> GroupTrip? {
+        // 对应后端接口：POST /api/trips，Body 为 CreateTripRequest。
+        // 服务端需根据 JWT 解析组织者身份，并返回持久化后的行程实体。
+        if let response: TripResponse = try await sendAllowingEmpty(
+            path: "/trips",
+            method: .post,
+            body: draft,
+            requiresAuth: true
+        ) {
+            return try response.toDomain()
+        }
+        return nil
+    }
+
     func favoriteListing(_ listingID: UUID) async throws -> SnowboardListing? {
         // 对应后端接口：POST /api/listings/{listing_id}/favorite。
         // 如果后端返回 204，这里会返回 nil，调用方应刷新列表或自行合并本地状态。
@@ -305,11 +329,9 @@ actor APIClient {
                 throw APIError.httpStatus(httpResponse.statusCode, data)
             }
 
-            do {
-                return try decoder.decode(Response.self, from: data)
-            } catch {
-                throw APIError.decoding(error)
-            }
+            let decoded: Response? = try decode(Response.self, from: data, allowingMissingPayload: false)
+            guard let value = decoded else { throw APIError.invalidResponse }
+            return value
         } catch let error as APIError {
             throw error
         } catch {
@@ -347,13 +369,7 @@ actor APIClient {
                 throw APIError.httpStatus(httpResponse.statusCode, data)
             }
 
-            guard !data.isEmpty else { return nil }
-
-            do {
-                return try decoder.decode(Response.self, from: data)
-            } catch {
-                throw APIError.decoding(error)
-            }
+            return try decode(Response.self, from: data, allowingMissingPayload: true)
         } catch let error as APIError {
             throw error
         } catch {
@@ -387,9 +403,62 @@ actor APIClient {
         return request
     }
 
+    private func decode<Response: Decodable>(
+        _ type: Response.Type,
+        from data: Data,
+        allowingMissingPayload: Bool
+    ) throws -> Response? {
+        if data.isEmpty {
+            if allowingMissingPayload {
+                return nil
+            }
+            throw APIError.invalidResponse
+        }
+
+        do {
+            return try decoder.decode(type, from: data)
+        } catch {
+            if let envelope = try? decoder.decode(APIEnvelope<Response>.self, from: data) {
+                if let payload = envelope.data {
+                    return payload
+                }
+
+                if allowingMissingPayload {
+                    if let success = envelope.success, success == false {
+                        throw APIError.domain(envelope.message ?? "Request failed")
+                    }
+                    if let code = envelope.code, code >= 400 {
+                        throw APIError.domain(envelope.message ?? "Request failed")
+                    }
+                    return nil
+                }
+
+                if let message = envelope.message, !message.isEmpty {
+                    throw APIError.domain(message)
+                }
+            }
+
+            if allowingMissingPayload, error is DecodingError {
+                return nil
+            }
+
+            throw APIError.decoding(error)
+        }
+    }
+
     private func decodeErrorMessage(from data: Data) -> String? {
         guard !data.isEmpty else { return nil }
-        return (try? decoder.decode(ErrorEnvelope.self, from: data))?.message
+        if let explicit = (try? decoder.decode(ErrorEnvelope.self, from: data))?.message, !explicit.isEmpty {
+            return explicit
+        }
+        if let envelope = try? decoder.decode(APIMessageEnvelope.self, from: data) {
+            if let message = envelope.message, !message.isEmpty { return message }
+            if let error = envelope.error, !error.isEmpty { return error }
+            if let detail = envelope.detail, !detail.isEmpty { return detail }
+            if let description = envelope.errorDescription, !description.isEmpty { return description }
+            if let status = envelope.status, !status.isEmpty { return status }
+        }
+        return nil
     }
 }
 
@@ -448,6 +517,17 @@ private struct UserResponse: Decodable {
 
 private struct FollowRequest: Encodable {
     let sellerId: UUID
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(sellerId, forKey: .snake)
+        try container.encode(sellerId, forKey: .camel)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case snake = "seller_id"
+        case camel = "sellerId"
+    }
 }
 
 private struct SocialGraphResponse: Decodable {
@@ -495,6 +575,88 @@ struct CreateListingRequest: Encodable {
         //     BigDecimal price, String location, String trade_option,
         //     Boolean is_favorite, String image_url) {}
         // 注意字段使用 snake_case（例如 trade_option、image_url）以配合前端编码策略。
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(title, forKey: .title)
+        try container.encode(description, forKey: .description)
+        try container.encode(condition, forKey: .condition)
+        try container.encode(price, forKey: .price)
+        try container.encode(location, forKey: .location)
+        try container.encode(tradeOption, forKey: .tradeOptionSnake)
+        try container.encode(tradeOption, forKey: .tradeOptionCamel)
+        try container.encode(isFavorite, forKey: .isFavoriteSnake)
+        try container.encode(isFavorite, forKey: .isFavoriteCamel)
+        if let imageUrl {
+            try container.encode(imageUrl, forKey: .imageUrlSnake)
+            try container.encode(imageUrl, forKey: .imageUrlCamel)
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case title
+        case description
+        case condition
+        case price
+        case location
+        case tradeOptionSnake = "trade_option"
+        case tradeOptionCamel = "tradeOption"
+        case isFavoriteSnake = "is_favorite"
+        case isFavoriteCamel = "isFavorite"
+        case imageUrlSnake = "image_url"
+        case imageUrlCamel = "imageUrl"
+    }
+}
+
+struct CreateTripRequest: Encodable {
+    let organizerID: UUID?
+    let title: String
+    let resort: String
+    let departureLocation: String
+    let startDate: Date
+    let minimumParticipants: Int
+    let maximumParticipants: Int
+    let estimatedCostPerPerson: Double
+    let description: String
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        if let organizerID {
+            try container.encode(organizerID, forKey: .organizerIDSnake)
+            try container.encode(organizerID, forKey: .organizerIDCamel)
+        }
+        try container.encode(title, forKey: .title)
+        try container.encode(resort, forKey: .resort)
+        try container.encode(departureLocation, forKey: .departureLocationSnake)
+        try container.encode(departureLocation, forKey: .departureLocationCamel)
+        try container.encode(startDate, forKey: .startDateSnake)
+        try container.encode(startDate, forKey: .startDateCamel)
+        try container.encode(minimumParticipants, forKey: .minimumParticipantsSnake)
+        try container.encode(minimumParticipants, forKey: .minimumParticipantsCamel)
+        try container.encode(maximumParticipants, forKey: .maximumParticipantsSnake)
+        try container.encode(maximumParticipants, forKey: .maximumParticipantsCamel)
+        try container.encode(estimatedCostPerPerson, forKey: .estimatedCostPerPersonSnake)
+        try container.encode(estimatedCostPerPerson, forKey: .estimatedCostPerPersonCamel)
+        try container.encode(description, forKey: .description)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case organizerIDSnake = "organizer_id"
+        case organizerIDCamel = "organizerId"
+        case title
+        case resort
+        case departureLocationSnake = "departure_location"
+        case departureLocationCamel = "departureLocation"
+        case startDateSnake = "start_date"
+        case startDateCamel = "startDate"
+        case minimumParticipantsSnake = "minimum_participants"
+        case minimumParticipantsCamel = "minimumParticipants"
+        case maximumParticipantsSnake = "maximum_participants"
+        case maximumParticipantsCamel = "maximumParticipants"
+        case estimatedCostPerPersonSnake = "estimated_cost_per_person"
+        case estimatedCostPerPersonCamel = "estimatedCostPerPerson"
+        case description
     }
 }
 
@@ -548,6 +710,90 @@ private struct ListingResponse: Decodable {
     }
 }
 
+private struct TripResponse: Decodable {
+    struct Organizer: Decodable {
+        let sellerId: UUID
+        let displayName: String
+        let rating: Double?
+        let dealsCount: Int?
+    }
+
+    struct JoinRequest: Decodable {
+        let requestId: UUID
+        let applicant: Organizer
+        let requestedAt: Date
+    }
+
+    let tripId: UUID
+    let title: String
+    let resort: String
+    let departureLocation: String
+    let startDate: Date
+    let minimumParticipants: Int
+    let maximumParticipants: Int
+    let estimatedCostPerPerson: Double
+    let description: String
+    let organizer: Organizer
+    let approvedParticipantIds: [UUID]?
+    let pendingRequests: [JoinRequest]?
+
+    func toDomain() throws -> GroupTrip {
+        guard minimumParticipants <= maximumParticipants else {
+            throw APIClient.APIError.domain("Trip minimum participants exceeds maximum: \(minimumParticipants) > \(maximumParticipants)")
+        }
+
+        let organizerModel = SnowboardListing.Seller(
+            id: organizer.sellerId,
+            nickname: organizer.displayName,
+            rating: organizer.rating ?? 0,
+            dealsCount: organizer.dealsCount ?? 0
+        )
+
+        let requests = (pendingRequests ?? []).map { request in
+            GroupTrip.JoinRequest(
+                id: request.requestId,
+                applicant: SnowboardListing.Seller(
+                    id: request.applicant.sellerId,
+                    nickname: request.applicant.displayName,
+                    rating: request.applicant.rating ?? 0,
+                    dealsCount: request.applicant.dealsCount ?? 0
+                ),
+                requestedAt: request.requestedAt
+            )
+        }
+
+        return GroupTrip(
+            id: tripId,
+            title: title,
+            resort: resort,
+            departureLocation: departureLocation,
+            startDate: startDate,
+            participantRange: minimumParticipants...maximumParticipants,
+            estimatedCostPerPerson: estimatedCostPerPerson,
+            description: description,
+            organizer: organizerModel,
+            approvedParticipantIDs: Set(approvedParticipantIds ?? []),
+            pendingRequests: requests
+        )
+    }
+}
+
 private struct ErrorEnvelope: Decodable {
     let message: String?
+}
+
+private struct APIEnvelope<Payload: Decodable>: Decodable {
+    let code: Int?
+    let status: String?
+    let success: Bool?
+    let message: String?
+    let data: Payload?
+}
+
+private struct APIMessageEnvelope: Decodable {
+    let message: String?
+    let error: String?
+    let detail: String?
+    let errorDescription: String?
+    let status: String?
 }
