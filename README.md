@@ -38,7 +38,7 @@ codex01/
 | 发布雪板 | ✅ 已完成 | ✅ `POST /api/listings` | 以 JSON 表单提交，服务器返回创建后的实体。 |
 | 收藏 | ✅ 已完成 | ✅ `POST`/`DELETE /api/listings/{id}/favorite` | 兼容 200 + JSON 与 204 空响应两种实现，并在必要时自动刷新列表。 |
 | 关注 / 私信解锁 | ✅ 已完成 | ✅ `POST`/`DELETE /api/social/follows`、`GET /api/social/graph` | 支持互相关注判断，即使关注接口仅返回状态码也能同步社交图谱。 |
-| 行程 / 群聊示例 | ✅ 已完成 | ⏳ 本地样例 | 依旧使用本地示例数据驱动，便于后续扩展真实接口。 |
+| 行程 / 群聊 | ✅ 已完成 | ✅ `GET /api/trips`、`POST /api/trips` | 发布与刷新行程均写入数据库，群聊仍使用本地示例线程。 |
 
 ## 🛠️ 环境要求
 
@@ -121,9 +121,10 @@ codex01/
   - 收藏按钮会调用 `MarketplaceViewModel.toggleFavorite`，内部根据当前状态命中 `POST /api/listings/{listing_id}/favorite` 或 `DELETE /api/listings/{listing_id}/favorite`。若服务器返回最新 Listing 即时合并；若返回 204 空响应或仅返回提示消息，则先本地切换心形状态并异步刷新列表，确保收藏结果最终与数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L114-L199】【F:Sources/Networking/APIClient.swift†L169-L268】
   - `ListingRowView` 与 `ListingDetailView` 会根据 `favoriteUpdatesInFlight` 显示加载态并禁用按钮，防止重复提交。【F:Sources/Views/ListingRowView.swift†L7-L59】【F:Sources/Views/ListingDetailView.swift†L7-L74】
 
-- **行程与群聊示例**
-  - `MarketplaceViewModel.createTrip`、`requestToJoin`、`approve` 与 `sendTripMessage` 等逻辑以本地数据结构模拟发布行程、审批报名和群聊体验，并在 `TripDetailView`、`TripChatView` 中消费这些状态。【F:Sources/ViewModels/MarketplaceViewModel.swift†L151-L213】【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
-  - 后端若落地行程模块，可参考当前字段扩展 `/api/trips` 与 `/api/trip-chats` 等端点。
+- **行程与群聊**
+  - `MarketplaceViewModel.refreshTrips` 会调用 `GET /api/trips` 获取后端存储的组团行程，并将本地群聊线程与最新行程列表对齐；若接口暂不可用会自动回退到示例数据。【F:Sources/ViewModels/MarketplaceViewModel.swift†L1-L414】
+  - `MarketplaceViewModel.createTrip` 使用 `POST /api/trips` 将新行程提交到服务器，成功后立即插入本地列表并触发一次刷新以确保和数据库保持一致。【F:Sources/ViewModels/MarketplaceViewModel.swift†L334-L414】【F:Sources/Networking/APIClient.swift†L168-L283】
+  - 行程详情与群聊界面仍沿用本地线程数据，后端若继续扩展报名与聊天接口，可在此基础上补充 `/api/trip-chats` 等端点。【F:Sources/Views/TripDetailView.swift†L1-L188】【F:Sources/Views/TripChatView.swift†L1-L93】
 
 ### 2. 统一配置
 

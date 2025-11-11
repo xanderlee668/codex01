@@ -234,6 +234,28 @@ actor APIClient {
         return try response.toDomain()
     }
 
+    func fetchTrips() async throws -> [GroupTrip] {
+        // 对应后端接口：GET /api/trips，返回当前可见的组团行程列表。
+        let response: [TripResponse] = try await send(
+            path: "/trips",
+            method: .get,
+            requiresAuth: true
+        )
+        return try response.map { try $0.toDomain() }
+    }
+
+    func createTrip(draft: CreateTripRequest) async throws -> GroupTrip {
+        // 对应后端接口：POST /api/trips，Body 为 CreateTripRequest。
+        // 服务端需根据 JWT 解析组织者身份，并返回持久化后的行程实体。
+        let response: TripResponse = try await send(
+            path: "/trips",
+            method: .post,
+            body: draft,
+            requiresAuth: true
+        )
+        return try response.toDomain()
+    }
+
     func favoriteListing(_ listingID: UUID) async throws -> SnowboardListing? {
         // 对应后端接口：POST /api/listings/{listing_id}/favorite。
         // 如果后端返回 204，这里会返回 nil，调用方应刷新列表或自行合并本地状态。
@@ -506,6 +528,17 @@ struct CreateListingRequest: Encodable {
     }
 }
 
+struct CreateTripRequest: Encodable {
+    let title: String
+    let resort: String
+    let departureLocation: String
+    let startDate: Date
+    let minimumParticipants: Int
+    let maximumParticipants: Int
+    let estimatedCostPerPerson: Double
+    let description: String
+}
+
 private struct ListingResponse: Decodable {
     struct Seller: Decodable {
         let sellerId: UUID
@@ -552,6 +585,74 @@ private struct ListingResponse: Decodable {
             imageName: imageUrl ?? "",
             photos: [],
             seller: sellerModel
+        )
+    }
+}
+
+private struct TripResponse: Decodable {
+    struct Organizer: Decodable {
+        let sellerId: UUID
+        let displayName: String
+        let rating: Double?
+        let dealsCount: Int?
+    }
+
+    struct JoinRequest: Decodable {
+        let requestId: UUID
+        let applicant: Organizer
+        let requestedAt: Date
+    }
+
+    let tripId: UUID
+    let title: String
+    let resort: String
+    let departureLocation: String
+    let startDate: Date
+    let minimumParticipants: Int
+    let maximumParticipants: Int
+    let estimatedCostPerPerson: Double
+    let description: String
+    let organizer: Organizer
+    let approvedParticipantIds: [UUID]?
+    let pendingRequests: [JoinRequest]?
+
+    func toDomain() throws -> GroupTrip {
+        guard minimumParticipants <= maximumParticipants else {
+            throw APIClient.APIError.domain("Trip minimum participants exceeds maximum: \(minimumParticipants) > \(maximumParticipants)")
+        }
+
+        let organizerModel = SnowboardListing.Seller(
+            id: organizer.sellerId,
+            nickname: organizer.displayName,
+            rating: organizer.rating ?? 0,
+            dealsCount: organizer.dealsCount ?? 0
+        )
+
+        let requests = (pendingRequests ?? []).map { request in
+            GroupTrip.JoinRequest(
+                id: request.requestId,
+                applicant: SnowboardListing.Seller(
+                    id: request.applicant.sellerId,
+                    nickname: request.applicant.displayName,
+                    rating: request.applicant.rating ?? 0,
+                    dealsCount: request.applicant.dealsCount ?? 0
+                ),
+                requestedAt: request.requestedAt
+            )
+        }
+
+        return GroupTrip(
+            id: tripId,
+            title: title,
+            resort: resort,
+            departureLocation: departureLocation,
+            startDate: startDate,
+            participantRange: minimumParticipants...maximumParticipants,
+            estimatedCostPerPerson: estimatedCostPerPerson,
+            description: description,
+            organizer: organizerModel,
+            approvedParticipantIDs: Set(approvedParticipantIds ?? []),
+            pendingRequests: requests
         )
     }
 }
